@@ -1,3 +1,14 @@
+use args::{Args, Commands};
+use clap::Parser;
+
+mod args;
+
 fn main() {
-    println!("Hello, world!");
+    let args = Args::parse();
+
+    match args.command {
+        Commands::Dev => {
+            println!("Running in dev mode");
+        }
+    }
 }

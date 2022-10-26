@@ -1,5 +1,6 @@
 [workspace]
 
 members = [
-    "./packages/monolith_core"
+    "./packages/monolith_core",
+    "./packages/monolith",
 ]
