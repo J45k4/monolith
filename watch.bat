@@ -1,0 +1,1 @@
+deno bundle --watch -c tsconfig.json ./ts/app.ts public/index.js

@@ -1,0 +1,1 @@
+deno bundle -c tsconfig.json ./ts/app.ts ui/index.js
