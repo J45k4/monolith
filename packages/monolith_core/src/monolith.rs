@@ -15,9 +15,13 @@ struct Worker {
 
 impl Worker {
     async fn run(self) {
-        let routes = routes(self.tx);
+        let tx = self.tx.clone();
+
+        let routes = routes(tx.clone());
         
         let server = warp::serve(routes);
+
+        log::info!("binding server to port {}", self.port);
 
         let (addr, fut) = server.bind_with_graceful_shutdown(([127, 0, 0, 1], self.port), async move {
             self.stopper_recv.await.unwrap();
@@ -28,6 +32,8 @@ impl Worker {
         log::info!("websocket server listening on {}", addr);
 
         fut.await;
+
+        log::info!("websocket server stopped")
     }
 }
 
@@ -70,6 +76,8 @@ impl MonolithBuilder {
         });
 
         tokio::spawn(async move {
+            log::info!("starting worker");
+
             let worker = Worker {
                 tx,
                 stopper_recv,

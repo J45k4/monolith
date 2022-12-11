@@ -1,58 +1,56 @@
+import { createLogger } from "./logger.ts";
 import { MessageToSrv } from "./types.ts";
 
-const log = (...data: any[]) => {
-    console.log(`[MessageSender]`, ...data)
-}
+const logger = createLogger("message_sender")
+
+type SendMsgs = (msg: MessageToSrv[]) => void
 
 export class MessageSender {
-    private ws: WebSocket
+    private sender: SendMsgs
     private queue: MessageToSrv[] = []
     private timeout = 0
-    constructor(ws: WebSocket) {
-        this.ws = ws
+    constructor(send: SendMsgs) {
+        this.sender = send
     }
 
     public send(msg: MessageToSrv) {
-        log("send", msg)
+        logger.info("send", msg)
 
         this.queue.push(msg)
         this.sendNext()
     }
 
     private sendNext() {
-        log("sendNext")
+        logger.info("sendNext")
 
         if (this.timeout) {
-            log("timeout already exist")
+            logger.info("timeout already exist")
 
             return
         }
 
         this.timeout = setTimeout(() => {
-            log("timeout")
+            logger.info("timeout")
 
             this.sendNow()
         }, 500)
     }
 
     public sendNow() {
-        log("sendNow")
+        logger.info("sendNow")
 
         clearInterval(this.timeout)
         this.timeout = 0
 
         if (this.queue.length === 0) {
-            log("queue is empty")
+            logger.info("queue is empty")
 
             return
         }
 
-        const jsonMsg = JSON.stringify(this.queue)
-
-        log("sendingNow", jsonMsg)
-
-        this.queue = []
+        logger.info("sendingNow", this.queue)
         
-        this.ws.send(jsonMsg)
+        this.sender(this.queue)
+        this.queue = []
     }
 }

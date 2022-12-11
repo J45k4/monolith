@@ -6,8 +6,8 @@ export type Text = {
     text: string
 }
 
-export type Div = {
-    type: "div"
+export type View = {
+    type: "view"
     body: Item[]
 }
 
@@ -39,7 +39,7 @@ export type Checkbox = {
     checked: boolean
 }
 
-export type Item = Div | 
+export type Item = View | 
     Text | 
     Button | 
     TextInput | 

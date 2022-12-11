@@ -23,7 +23,8 @@ pub fn routes(tx: mpsc::Sender<Client>) -> impl Filter<Extract = impl warp::Repl
         });
     
     let index = warp::any()
-        .and(warp::fs::dir("./public"));
+        .and(warp::fs::dir("./public"))
+        .or(ws_path);
 
     index
 }

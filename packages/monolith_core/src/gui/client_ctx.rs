@@ -67,6 +67,12 @@ impl Clone for ClientWriter {
     }
 }
 
+impl Drop for ClientWriter {
+    fn drop(&mut self) {
+        log::info!("dropping ClientWriter");
+    }
+}
+
 impl ClientWriter {
     pub async fn render(&self, root: Item) {
         log::info!("render root");
@@ -124,6 +130,10 @@ impl Client {
                 last_root: None
             }))
         }
+    }
+
+    pub fn id(&self) -> usize {
+        self.id
     }
 
     pub async fn get_renderer(&self) -> ClientRenderer {

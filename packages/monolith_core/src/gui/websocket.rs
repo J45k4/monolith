@@ -13,7 +13,7 @@ async fn handle_socket(
     msg: Option<Result<Message, Error>>, 
     tx: &mut mpsc::UnboundedSender<ClientEvent>
 ) -> bool {
-    log::info!("handle_socket");
+    log::info!("handle_socket {:?}", msg);
     
     match msg {
         Some(msg) => {
@@ -73,20 +73,22 @@ pub async fn handle_ws_conn(
     loop {
         tokio::select! {
             msg = socket.next() => {
-                log::info!("socket.next");
+                log::info!("received {:?}", msg);
 
                 if !handle_socket(msg, &mut sender_tx).await {
                     break;
                 }
             },
             msg = receiver_rx.recv() => {
-                log::info!("receiver_rx.recv");
-
                 match msg {
                     Some(msg) => {
+                        log::info!("sending {:?}", msg);
+
                         socket.send(Message::text(msg)).await.unwrap();
                     },
                     None => {
+                        log::info!("closing");
+
                         break;
                     }
                 }

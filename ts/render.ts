@@ -15,8 +15,8 @@ export const renderItem = (item: Item, ctx: Context, old?: Element) => {
             }
 
             return document.createTextNode(item.text)
-        case "div": {
-            outerLogger.info("render div")
+        case "view": {
+            outerLogger.info("render view")
 
             if (old instanceof HTMLDivElement) {
                 old.innerHTML = ""
