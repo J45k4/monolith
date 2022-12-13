@@ -1,5 +1,16 @@
+
+#[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum FlexDirection {
+    Column,
+    Row
+}
+
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
 pub struct View {
+    #[serde(rename = "flexDirection")]
+    pub flex_direction: FlexDirection,
+    pub flex: Option<u32>,
     pub body: Vec<Item>
 }
 

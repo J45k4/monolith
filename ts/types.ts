@@ -6,8 +6,15 @@ export type Text = {
     text: string
 }
 
+export enum FlexDirection {
+    Row = "row",
+    Column = "column"
+}
+
 export type View = {
     type: "view"
+    flex: number
+    flexDirection: FlexDirection
     body: Item[]
 }
 

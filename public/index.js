@@ -3,11 +3,11 @@
 // This code was bundled using `deno bundle` and it's not recommended to edit it manually
 
 var LogLevel;
-(function(LogLevel1) {
-    LogLevel1[LogLevel1["Debug"] = 1] = "Debug";
-    LogLevel1[LogLevel1["Info"] = 2] = "Info";
-    LogLevel1[LogLevel1["Warn"] = 3] = "Warn";
-    LogLevel1[LogLevel1["Error"] = 4] = "Error";
+(function(LogLevel) {
+    LogLevel[LogLevel["Debug"] = 1] = "Debug";
+    LogLevel[LogLevel["Info"] = 2] = "Info";
+    LogLevel[LogLevel["Warn"] = 3] = "Warn";
+    LogLevel[LogLevel["Error"] = 4] = "Error";
 })(LogLevel || (LogLevel = {}));
 let loglevel = LogLevel.Info;
 const createLogger = (name)=>{
@@ -127,16 +127,19 @@ const renderItem = (item, ctx, old)=>{
                     return;
                 }
                 const div = document.createElement("div");
-                for (const i of item.body){
-                    const el = renderItem(i, ctx);
-                    div.appendChild(el);
+                div.style.display = "flex";
+                div.style.flexDirection = item.flexDirection;
+                div.style.flexGrow = item.flex?.toString();
+                for (const i1 of item.body){
+                    const el1 = renderItem(i1, ctx);
+                    div.appendChild(el1);
                 }
                 return div;
             }
         case "button":
             {
-                const logger5 = outerLogger.child(`button:${item.name}:${item.id}`);
-                logger5.info("render button");
+                const logger = outerLogger.child(`button:${item.name}:${item.id}`);
+                logger.info("render button");
                 if (old instanceof HTMLButtonElement) {
                     old.textContent = item.title;
                     return;
@@ -144,7 +147,7 @@ const renderItem = (item, ctx, old)=>{
                 const button = document.createElement("button");
                 button.innerText = item.title;
                 button.onclick = ()=>{
-                    logger5.info("button clicked");
+                    logger.info("button clicked");
                     ctx.sender.send({
                         type: "onClick",
                         id: item.id,
@@ -156,8 +159,8 @@ const renderItem = (item, ctx, old)=>{
             }
         case "textInput":
             {
-                const logger6 = outerLogger.child(`textInput:${item.name}:${item.id}`);
-                logger6.info(`render textInput`, item);
+                const logger1 = outerLogger.child(`textInput:${item.name}:${item.id}`);
+                logger1.info(`render textInput`, item);
                 let registered = false;
                 if (old instanceof HTMLInputElement) {
                     if (!registered || !ctx.debouncer.valueChanged) {
@@ -169,11 +172,11 @@ const renderItem = (item, ctx, old)=>{
                 input.placeholder = item.placeholder;
                 input.value = item.value;
                 input.oninput = (e)=>{
-                    logger6.info(`oninput ${input.value}`);
+                    logger1.info(`oninput ${input.value}`);
                     ctx.debouncer.change(e.target.value);
                 };
                 input.onkeydown = (e)=>{
-                    logger6.info(`keydown: ${e.key}`);
+                    logger1.info(`keydown: ${e.key}`);
                     if (e.key === "Enter") {
                         ctx.debouncer.trigger();
                         ctx.sender.send({
@@ -186,9 +189,9 @@ const renderItem = (item, ctx, old)=>{
                     }
                 };
                 input.onfocus = ()=>{
-                    logger6.info("focus");
+                    logger1.info("focus");
                     ctx.debouncer.register((v)=>{
-                        logger6.info(`changed to ${v}`);
+                        logger1.info(`changed to ${v}`);
                         ctx.sender.send({
                             type: "onTextChanged",
                             id: item.id,
@@ -200,7 +203,7 @@ const renderItem = (item, ctx, old)=>{
                     registered = true;
                 };
                 input.onblur = ()=>{
-                    logger6.info("blur");
+                    logger1.info("blur");
                     ctx.debouncer.trigger();
                     ctx.debouncer.unregister();
                     registered = false;
@@ -209,8 +212,8 @@ const renderItem = (item, ctx, old)=>{
             }
         case "checkbox":
             {
-                const logger7 = outerLogger.child(`checkbox:${item.name}:${item.id}`);
-                logger7.info("render checkbox");
+                const logger2 = outerLogger.child(`checkbox:${item.name}:${item.id}`);
+                logger2.info("render checkbox");
                 if (old instanceof HTMLInputElement) {
                     old.checked = item.checked;
                     return;
@@ -345,9 +348,9 @@ window.onload = ()=>{
             }
             if (message.type === "addBack") {
                 logger4.info("addBack", message);
-                const newEl = renderItem(message.item, ctx);
-                if (newEl) {
-                    element.appendChild(newEl);
+                const newEl1 = renderItem(message.item, ctx);
+                if (newEl1) {
+                    element.appendChild(newEl1);
                 }
             }
             if (message.type === "removeInx") {

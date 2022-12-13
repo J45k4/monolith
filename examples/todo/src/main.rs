@@ -5,6 +5,7 @@ use futures::stream::SelectAll;
 use futures::StreamExt;
 use log::LevelFilter;
 use monolith_core::ClientWriter;
+use monolith_core::FlexDirection;
 use monolith_core::Monolith;
 use monolith_core::{MonolithBuilder, Item, View, Checkbox, Text, TextInput, Button, Client, ClientEvent, ClientReceiver};
 
@@ -56,6 +57,8 @@ fn render_page(todolist: &Todolist) -> Item {
         rows.push(
             Item::View(
                 View {
+                    flex_direction: FlexDirection::Row,
+                    flex: None,
                     body: vec![
                         Item::Checkbox(
                             Checkbox {
@@ -77,9 +80,13 @@ fn render_page(todolist: &Todolist) -> Item {
 
     Item::View(
         View {
+            flex_direction: FlexDirection::Column,
+            flex: None,
             body: vec![
                 Item::View(
                     View {
+                        flex_direction: FlexDirection::Row,
+                        flex: None,
                         body: vec![
                             Item::TextInput(
                                 TextInput {
@@ -101,6 +108,8 @@ fn render_page(todolist: &Todolist) -> Item {
                 ),
                 Item::View(
                     View {
+                        flex_direction: FlexDirection::Column,
+                        flex: None,
                         body: rows
                     }
                 )

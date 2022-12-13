@@ -31,6 +31,10 @@ export const renderItem = (item: Item, ctx: Context, old?: Element) => {
 
             const div = document.createElement("div")
 
+            div.style.display = "flex"
+            div.style.flexDirection = item.flexDirection
+            div.style.flexGrow = item.flex?.toString()
+
             for (const i of item.body) {
                 const el = renderItem(i, ctx)
                 div.appendChild(el as any)
