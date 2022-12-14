@@ -93,7 +93,14 @@ export type OnKeyDown = {
     keycode: string
 }
 
-export type MessageToSrv = OnClick | OnTextChange | OnKeyDown
+export type ParametersChanged = {
+    type: "parametersChanged"
+    params: any
+    query: any
+    headers: any
+}
+
+export type MessageToSrv = OnClick | OnTextChange | OnKeyDown | ParametersChanged
 
 export type MessagesToSrv = MessageToSrv[]
 

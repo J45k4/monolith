@@ -5,10 +5,12 @@ import { MessageToSrv, SrvMessage } from "./types.ts";
 const logger = createLogger("ws")
 
 type OnMessage = (sender: MessageSender, msgs: SrvMessage[]) => void
+type OnOpen = (sender: MessageSender) => void
 
-export const connectWebsocket = (
+export const connectWebsocket = (args: {
     onMessage: OnMessage
-) => {
+    onOpen: OnOpen
+}) => {
     let ws: WebSocket | undefined
 
     const sender = new MessageSender((msgs: MessageToSrv[]) => {
@@ -29,11 +31,13 @@ export const connectWebsocket = (
             const messages = JSON.parse(data) as SrvMessage[]
             logger.info("received", messages)
     
-            onMessage(sender, messages)
+            args.onMessage(sender, messages)
         }
     
         ws.onopen = () => {
             logger.info("connected")
+
+            args.onOpen(sender)
         }
     
         ws.onclose = () => {

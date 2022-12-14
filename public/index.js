@@ -273,7 +273,7 @@ class MessageSender {
     }
 }
 const logger3 = createLogger("ws");
-const connectWebsocket = (onMessage)=>{
+const connectWebsocket = (args)=>{
     let ws;
     const sender = new MessageSender((msgs)=>{
         if (!ws) {
@@ -288,10 +288,11 @@ const connectWebsocket = (onMessage)=>{
             logger3.info("rawdata", data);
             const messages = JSON.parse(data);
             logger3.info("received", messages);
-            onMessage(sender, messages);
+            args.onMessage(sender, messages);
         };
         ws.onopen = ()=>{
             logger3.info("connected");
+            args.onOpen(sender);
         };
         ws.onclose = ()=>{
             logger3.info("disconnected");
@@ -326,36 +327,49 @@ window.onload = ()=>{
     content.appendChild(root);
     logger4.info("root", res);
     const debouncer = new Deboncer();
-    connectWebsocket((sender, msgs)=>{
-        const ctx = {
-            sender,
-            debouncer
-        };
-        for (const message of msgs){
-            logger4.info("process", message);
-            const element = getPathItem(message.path, root);
-            logger4.info("element", element);
-            if (!element) {
-                logger4.info(`cannot find element with path ${message.path}`);
-                continue;
-            }
-            if (message.type === "replace") {
-                logger4.info("replace", message);
-                const newEl = renderItem(message.item, ctx, element);
-                if (newEl) {
-                    element.replaceWith(newEl);
+    connectWebsocket({
+        onMessage: (sender, msgs)=>{
+            const ctx = {
+                sender,
+                debouncer
+            };
+            for (const message of msgs){
+                logger4.info("process", message);
+                const element = getPathItem(message.path, root);
+                logger4.info("element", element);
+                if (!element) {
+                    logger4.info(`cannot find element with path ${message.path}`);
+                    continue;
+                }
+                if (message.type === "replace") {
+                    logger4.info("replace", message);
+                    const newEl = renderItem(message.item, ctx, element);
+                    if (newEl) {
+                        element.replaceWith(newEl);
+                    }
+                }
+                if (message.type === "addBack") {
+                    logger4.info("addBack", message);
+                    const newEl1 = renderItem(message.item, ctx);
+                    if (newEl1) {
+                        element.appendChild(newEl1);
+                    }
+                }
+                if (message.type === "removeInx") {
+                    element.children.item(message.inx)?.remove();
                 }
             }
-            if (message.type === "addBack") {
-                logger4.info("addBack", message);
-                const newEl1 = renderItem(message.item, ctx);
-                if (newEl1) {
-                    element.appendChild(newEl1);
-                }
-            }
-            if (message.type === "removeInx") {
-                element.children.item(message.inx)?.remove();
-            }
+        },
+        onOpen: (sender)=>{
+            const params = new URLSearchParams(location.href);
+            logger4.info("onOpen", params);
+            sender.send({
+                type: "parametersChanged",
+                params: [],
+                query: {},
+                headers: {}
+            });
+            sender.sendNow();
         }
     });
 };

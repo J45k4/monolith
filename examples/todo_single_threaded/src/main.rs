@@ -1,13 +1,6 @@
-use std::collections::HashMap;
-
 use env_logger::Builder;
-use futures::stream::SelectAll;
-use futures::StreamExt;
 use log::LevelFilter;
-use monolith_core::ClientWriter;
-use monolith_core::FlexDirection;
-use monolith_core::Monolith;
-use monolith_core::{MonolithBuilder, Item, View, Checkbox, Text, TextInput, Button, Client, ClientEvent, ClientReceiver};
+use monolith_core::{SingleMonolith, MonolithBuilder, Item, FlexDirection, View, Checkbox, Text, TextInput, Button, ClientEvent};
 
 pub struct TodoItem {
     pub name: String,
@@ -118,60 +111,26 @@ fn render_page(todolist: &Todolist) -> Item {
     )
 }
 
-struct TodoApp {
-    todolist: Todolist,
-    receivers: SelectAll<ClientReceiver>,
-    monolith: Monolith,
-    writers: HashMap<usize, ClientWriter>
-    // client_futures: FuturesUnordered<Box<dyn Future<Output = (Option<ClientEvent>, Client)>>>
-}
+#[tokio::main]
+async fn main() {
+    Builder::new().filter_level(LevelFilter::Info).init();
 
-impl TodoApp {
-    pub fn new() -> TodoApp {
-        let monolith = MonolithBuilder::new()
-            // .port(8080)
-            .build();
+    let mut todolist = Todolist::new();
 
-        TodoApp {
-            todolist: Todolist::new(),
-            receivers: SelectAll::new(),
-            writers: HashMap::new(),
-            monolith: monolith
-            // client_futures: FuturesUnordered::new() 
-        }
-    }
 
-    pub async fn handle_new_client(&mut self, mut client: Client) {
-        log::info!("handle new client");
 
-        let item = render_page(&self.todolist);
+    let mut monolith = MonolithBuilder::new().build().single_threaded();
 
-        client.render(item).await;
-
-        // self.client_futures.push(Box::new(client.next()));
-
-        let id = client.id();
-
-        let (w, r) = client.split();
-
-        self.receivers.push(r);
-        self.writers.insert(id, w);
-    }
-
-    async fn handle_event(&mut self, event: ClientEvent, client_id: usize) {
+    while let Some((writer, event)) = monolith.recv_next().await {
         match event {
-            ClientEvent::Disconnected => {
-                log::info!("client {} disconnected", client_id);
-                self.writers.remove(&client_id);
-            },
             ClientEvent::OnClick(o) => {
                 match o.name.as_str() {
                     "add" => {
-                        self.todolist.add(self.todolist.new_item_name.clone());
-                        self.todolist.new_item_name = "".to_string();
+                        todolist.add(todolist.new_item_name.clone());
+                        todolist.new_item_name = "".to_string();
                     },
                     "completed" => {
-                        self.todolist.toggle(o.id);
+                        todolist.toggle(o.id);
                     },
                     _ => {}
                 }
@@ -179,62 +138,22 @@ impl TodoApp {
             ClientEvent::OnTextChanged(o) => {
                 match o.name.as_str() {
                     "newTodoItemName" => {
-                        self.todolist.new_item_name = o.value;
+                        todolist.new_item_name = o.value;
                     },
                     _ => {}
                 }
             },
             ClientEvent::OnKeyDown(event) => {
                 if event.keycode == "Enter" {
-                    self.todolist.add(self.todolist.new_item_name.clone());
-                    self.todolist.new_item_name = String::new();
+                    todolist.add(todolist.new_item_name.clone());
+                    todolist.new_item_name = String::new();
                 }
             },
             _ => {}
         }
 
-        match self.writers.get(&client_id) {
-            Some(w) => {
-                let item = render_page(&self.todolist);
+        let item = render_page(&todolist);
 
-                w.render(item).await;
-            },
-            None => {
-                log::info!("no writer for client {}", client_id);
-            }
-        }
+        writer.render(item).await;
     }
-
-    pub async fn run(mut self) {
-        loop {
-            tokio::select! {
-                Some(client) = self.monolith.accept_client() => {
-                    self.handle_new_client(client).await;
-                }
-                Some((id, event)) = self.receivers.next() => {
-                    log::info!("event {:?}", event);
-
-                    self.handle_event(event, id).await;
-                }
-                else => {
-                    log::info!("no more clients");
-
-                    break;
-                }
-            }
-        }
-    }
-}
-
-#[tokio::main]
-async fn main() {
-    // env_logger::init();
-
-    Builder::new().filter_level(LevelFilter::Info).init();
-
-    log::info!("does this work");
-
-    let app = TodoApp::new();
-
-    app.run().await;
 }

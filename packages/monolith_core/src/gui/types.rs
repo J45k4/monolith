@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::gui::Item;
 
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
@@ -28,9 +30,17 @@ pub struct OnKeyDown {
 }
 
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ParametersChanged {
+    pub query: HashMap<String, String>,
+    pub params: Vec<String>,
+    pub headers: HashMap<String, String>,
+}
+
+#[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum ClientEvent { 
     Disconnected,
+    ParametersChanged(ParametersChanged),
     OnClick(OnClick),
     OnTextChanged(OnTextChanged),
     OnKeyDown(OnKeyDown)

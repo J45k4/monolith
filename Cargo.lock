@@ -597,6 +597,7 @@ name = "monolith_core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "futures",
  "futures-util",
  "log",
  "serde",
@@ -1054,6 +1055,17 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "todo"
+version = "0.1.0"
+dependencies = [
+ "env_logger",
+ "futures",
+ "log",
+ "monolith_core",
+ "tokio",
+]
+
+[[package]]
+name = "todo_single_threaded"
 version = "0.1.0"
 dependencies = [
  "env_logger",
