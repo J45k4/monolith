@@ -10,7 +10,7 @@ use futures::stream::SelectAll;
 use crate::ClientEvent;
 use crate::ClientReceiver;
 use crate::ClientWriter;
-use crate::{gui::{self, Client}, routes::routes};
+use crate::{gui::Client, routes::routes};
 
 struct Worker {
     tx: mpsc::Sender<Client>,
@@ -42,6 +42,26 @@ impl Worker {
     }
 }
 
+fn create_worker(port: u16) -> (mpsc::Receiver<Client>, oneshot::Sender<()>) {
+    let (tx, rx) = mpsc::channel(100);
+
+    let (stopper_send, stopper_recv) = oneshot::channel::<()>();
+
+    tokio::spawn(async move {
+        log::info!("starting worker");
+
+        let worker = Worker {
+            tx,
+            stopper_recv,
+            port: port
+        };
+
+        worker.run().await;
+    });
+
+    (rx, stopper_send)
+}
+
 struct Internal {
     stopper: Option<oneshot::Sender<()>>,
 }
@@ -71,30 +91,13 @@ impl MonolithBuilder {
         self
     }
 
-    pub fn build(self) -> Monolith {
-        let (tx, rx) = mpsc::channel(100);
-
-        let (stopper_send, stopper_recv) = oneshot::channel::<()>();
-
-        // let intertal = Arc::new(Internal {
-        //     stopper: Some(stopper_send)
-        // });
-
-        tokio::spawn(async move {
-            log::info!("starting worker");
-
-            let worker = Worker {
-                tx,
-                stopper_recv,
-                port: self.port
-            };
-
-            worker.run().await;
-        });
+    pub fn build(self) -> Monolith<()> {
+        let (rx, stopper_send) = create_worker(self.port);
 
         Monolith {
             rx: rx,
-            stopper: stopper_send
+            stopper: stopper_send,
+            ctx: ()
             // interal: intertal
         }
     }
@@ -125,6 +128,10 @@ impl SingleMonolith {
         }
     }
 
+    pub fn get_writers(&self) -> &HashMap<usize, ClientWriter> {
+        &self.writers
+    }
+
     pub async fn recv_next(&mut self) -> Option<(ClientWriter, ClientEvent)> {
         loop {
             tokio::select! {
@@ -147,12 +154,17 @@ impl SingleMonolith {
     }
 }
 
-pub struct Monolith {
+pub struct Monolith<T>
+where T: Send + Clone
+{
     rx: mpsc::Receiver<Client>,
     stopper: oneshot::Sender<()>,
+    ctx: T
 }
 
-impl Monolith {
+impl<T> Monolith<T>
+where T: Send + Clone
+{
     pub async fn accept_client(&mut self) -> Option<Client> {
         self.rx.recv().await
     }
