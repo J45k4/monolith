@@ -72,7 +72,8 @@ fn render_page(todolist: &Todolist) -> Item {
                                 text: item.name.clone()
                             }
                         )
-                    ]
+                    ],
+                    ..Default::default()
                 }
             )
         )
@@ -103,17 +104,20 @@ fn render_page(todolist: &Todolist) -> Item {
                                     title: "Add".to_string(),
                                 }
                             )
-                        ]
+                        ],
+                        ..Default::default()
                     }
                 ),
                 Item::View(
                     View {
                         flex_direction: FlexDirection::Column,
                         flex: None,
-                        body: rows
+                        body: rows,
+                        ..Default::default()
                     }
                 )
-            ]
+            ],
+            ..Default::default()
         }
     )
 }
@@ -121,7 +125,7 @@ fn render_page(todolist: &Todolist) -> Item {
 struct TodoApp {
     todolist: Todolist,
     receivers: SelectAll<ClientReceiver>,
-    monolith: Monolith,
+    monolith: Monolith<()>,
     writers: HashMap<usize, ClientWriter>
     // client_futures: FuturesUnordered<Box<dyn Future<Output = (Option<ClientEvent>, Client)>>>
 }

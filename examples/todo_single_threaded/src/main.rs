@@ -65,7 +65,8 @@ fn render_page(todolist: &Todolist) -> Item {
                                 text: item.name.clone()
                             }
                         )
-                    ]
+                    ],
+                    ..Default::default()
                 }
             )
         )
@@ -96,17 +97,20 @@ fn render_page(todolist: &Todolist) -> Item {
                                     title: "Add".to_string(),
                                 }
                             )
-                        ]
+                        ],
+                        ..Default::default()
                     }
                 ),
                 Item::View(
                     View {
                         flex_direction: FlexDirection::Column,
                         flex: None,
-                        body: rows
-                    }
+                        body: rows,
+                        ..Default::default()
+                    },
                 )
-            ]
+            ],
+            ..Default::default()
         }
     )
 }
@@ -116,8 +120,6 @@ async fn main() {
     Builder::new().filter_level(LevelFilter::Info).init();
 
     let mut todolist = Todolist::new();
-
-
 
     let mut monolith = MonolithBuilder::new().build().single_threaded();
 

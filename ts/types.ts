@@ -15,6 +15,8 @@ export type View = {
     type: "view"
     flex: number
     flexDirection: FlexDirection
+    height: number
+    width: number
     body: Item[]
 }
 

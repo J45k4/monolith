@@ -6,11 +6,19 @@ pub enum FlexDirection {
     Row
 }
 
-#[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
+impl Default for FlexDirection {
+    fn default() -> Self {
+        FlexDirection::Column
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct View {
     #[serde(rename = "flexDirection")]
     pub flex_direction: FlexDirection,
     pub flex: Option<u32>,
+    pub height: Option<u32>,
+    pub width: Option<u32>,
     pub body: Vec<Item>
 }
 

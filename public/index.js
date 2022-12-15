@@ -127,6 +127,13 @@ const renderItem = (item, ctx, old)=>{
                     return;
                 }
                 const div = document.createElement("div");
+                if (item.width != null) {
+                    div.style.width = item.width + "px";
+                }
+                if (item.height != null) {
+                    div.style.height = item.height + "px";
+                }
+                div.style.overflow = "auto";
                 div.style.display = "flex";
                 div.style.flexDirection = item.flexDirection;
                 div.style.flexGrow = item.flex?.toString();
