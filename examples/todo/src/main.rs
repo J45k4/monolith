@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::collections::VecDeque;
 
 use env_logger::Builder;
 use futures::stream::SelectAll;
@@ -16,14 +17,14 @@ pub struct TodoItem {
 
 struct Todolist {
     pub new_item_name: String,
-    pub items: Vec<TodoItem>
+    pub items: VecDeque<TodoItem>
 }
 
 impl Todolist {
     pub fn new() -> Todolist {
         Todolist { 
             new_item_name: "".to_string(),
-            items: vec![] 
+            items: VecDeque::new() 
         }
     }
 
@@ -41,13 +42,11 @@ impl Todolist {
         if name == "" {
             return;
         }
-        
-        self.items.push(
-            TodoItem { 
-                name: name, 
-                completed: false 
-            }
-        )
+
+        self.items.push_front(TodoItem { 
+            name: name, 
+            completed: false 
+        });
     }
 }
 
