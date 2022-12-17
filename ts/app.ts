@@ -58,7 +58,25 @@ window.onload = () => {
                     if (newEl) {
                         element.replaceWith(newEl)
                     }
-                }   
+                }
+                
+                if (message.type === "replaceAt") {
+                    logger.info("replaceAt", message)
+                    const newEl = renderItem(message.item, ctx)
+    
+                    if (newEl) {
+                        element.children.item(message.inx)?.replaceWith(newEl)
+                    }
+                }
+                
+                if (message.type === "addFront") {
+                    logger.info("addFront", message)
+                    const newEl = renderItem(message.item, ctx)
+    
+                    if (newEl) {
+                        element.prepend(newEl)
+                    }
+                }
                 
                 if (message.type === "addBack") {
                     logger.info("addBack", message)
@@ -66,6 +84,21 @@ window.onload = () => {
     
                     if (newEl) {
                         element.appendChild(newEl)
+                    }
+                }
+
+                if (message.type === "insertAt") {
+                    logger.info("insertAt", message)
+                    const newEl = renderItem(message.item, ctx)
+    
+                    if (newEl) {
+                        const child = element.children.item(message.inx)
+    
+                        if (child) {
+                            child.before(newEl)
+                        } else {
+                            element.appendChild(newEl)
+                        }
                     }
                 }
     

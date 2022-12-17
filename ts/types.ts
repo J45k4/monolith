@@ -61,10 +61,30 @@ export type Replace = {
     item: Item
 }
 
+export type ReplaceAt = {
+    type: "replaceAt"
+    inx: number
+    path: number[]
+    item: Item
+}
+
 export type AddBack = {
     type: "addBack"
     path: number[]
     item: Item
+}
+
+export type AddFront = {
+    type: "addFront"
+    path: number[]
+    item: Item
+}
+
+export type InsertAt = {
+    type: "insertAt"
+    inx: number
+    item: Item
+    path: number[]
 }
 
 export type RemoveInx = {
@@ -73,7 +93,12 @@ export type RemoveInx = {
     path: number[]
 }
 
-export type SrvMessage = Replace | AddBack | RemoveInx
+export type SrvMessage = Replace |
+    ReplaceAt |
+    AddBack | 
+    AddFront | 
+    InsertAt | 
+    RemoveInx
 
 export type OnClick = {
     type: "onClick"

@@ -355,11 +355,37 @@ window.onload = ()=>{
                         element.replaceWith(newEl);
                     }
                 }
-                if (message.type === "addBack") {
-                    logger4.info("addBack", message);
+                if (message.type === "replaceAt") {
+                    logger4.info("replaceAt", message);
                     const newEl1 = renderItem(message.item, ctx);
                     if (newEl1) {
-                        element.appendChild(newEl1);
+                        element.children.item(message.inx)?.replaceWith(newEl1);
+                    }
+                }
+                if (message.type === "addFront") {
+                    logger4.info("addFront", message);
+                    const newEl2 = renderItem(message.item, ctx);
+                    if (newEl2) {
+                        element.prepend(newEl2);
+                    }
+                }
+                if (message.type === "addBack") {
+                    logger4.info("addBack", message);
+                    const newEl3 = renderItem(message.item, ctx);
+                    if (newEl3) {
+                        element.appendChild(newEl3);
+                    }
+                }
+                if (message.type === "insertAt") {
+                    logger4.info("insertAt", message);
+                    const newEl4 = renderItem(message.item, ctx);
+                    if (newEl4) {
+                        const child = element.children.item(message.inx);
+                        if (child) {
+                            child.before(newEl4);
+                        } else {
+                            element.appendChild(newEl4);
+                        }
                     }
                 }
                 if (message.type === "removeInx") {
