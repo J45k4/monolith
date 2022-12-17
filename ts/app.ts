@@ -93,12 +93,8 @@ window.onload = () => {
     
                     if (newEl) {
                         const child = element.children.item(message.inx)
-    
-                        if (child) {
-                            child.before(newEl)
-                        } else {
-                            element.appendChild(newEl)
-                        }
+
+                        child?.after(newEl)
                     }
                 }
     

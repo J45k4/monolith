@@ -381,11 +381,7 @@ window.onload = ()=>{
                     const newEl4 = renderItem(message.item, ctx);
                     if (newEl4) {
                         const child = element.children.item(message.inx);
-                        if (child) {
-                            child.before(newEl4);
-                        } else {
-                            element.appendChild(newEl4);
-                        }
+                        child?.after(newEl4);
                     }
                 }
                 if (message.type === "removeInx") {
