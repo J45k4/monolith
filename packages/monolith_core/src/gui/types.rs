@@ -55,6 +55,13 @@ pub struct Replace {
 }
 
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ReplaceAt {
+    pub path: ItemPath,
+    pub item: Item,
+    pub inx: usize
+}
+
+#[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AddBack {
     pub path: ItemPath,
     pub item: Item
@@ -67,6 +74,13 @@ pub struct AddFront {
 }
 
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
+pub struct InsertAt {
+    pub path: ItemPath,
+    pub item: Item,
+    pub inx: usize
+}
+
+#[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RemoveInx {
     pub path: ItemPath,
     pub inx: usize
@@ -76,7 +90,9 @@ pub struct RemoveInx {
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum ClientAction {
     Replace(Replace),
+    ReplaceAt(ReplaceAt),
     AddBack(AddBack),
     AddFront(AddFront),
+    InsertAt(InsertAt),
     RemoveInx(RemoveInx),
 }

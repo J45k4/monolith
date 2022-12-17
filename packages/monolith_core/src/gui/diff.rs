@@ -1,4 +1,4 @@
-use crate::gui::types::{ClientAction, AddBack, RemoveInx, Replace};
+use crate::{gui::{types::{ClientAction, AddBack, RemoveInx, Replace}, edit_distance::{get_minimum_edits, EditOperation}}, AddFront, InsertAt, ReplaceAt};
 
 use super::{gui::Item, types::ItemPath};
 
@@ -9,36 +9,47 @@ fn inner_diff(changes: &mut Vec<ClientAction>, old: &Item, new: &Item, path: Ite
 
     match (old, new) {
         (Item::View(old), Item::View(new)) => {
-            let m = std::cmp::max(
-                old.body.len(),
-                new.body.len()
-            );
+            let edits = get_minimum_edits(&old.body, &new.body);
 
-            for i in 0..m {
-                if i >= old.body.len() {
-                    log::debug!("add back");
-                    changes.push(ClientAction::AddBack(
-                        AddBack {
-                            path: path.clone(),
-                            item: new.body[i].clone()
-                        }
-                    ));
-                } else if i >= new.body.len() {
-                    log::debug!("remove inx");
-                    changes.push(
-                        ClientAction::RemoveInx(
-                            RemoveInx {
-                                path: path.clone(),
-                                inx: i
-                            }
-                        )
-                    );
-                } else {
-                    log::debug!("diff child");
-                    let mut path = path.clone();
-                    path.push(i);
-
-                    inner_diff(changes, &old.body[i], &new.body[i], path);
+            for edit in edits {
+                match edit {
+                    EditOperation::InsertFirst(item) => {
+                        changes.push(
+                            ClientAction::AddFront(
+                                AddFront {
+                                    path: path.clone(),
+                                    item: item
+                                }
+                            )
+                        );
+                    },
+                    EditOperation::InsertAt(index, item) => {
+                        changes.push(
+                            ClientAction::InsertAt(
+                                InsertAt {
+                                    path: path.clone(),
+                                    inx: index,
+                                    item: item
+                                }
+                            )
+                        );
+                    },
+                    EditOperation::RemoveAt(index) => {
+                        changes.push(
+                            ClientAction::RemoveInx(
+                                RemoveInx {
+                                    path: path.clone(),
+                                    inx: index
+                                }
+                            )
+                        );
+                    },
+                    EditOperation::ReplaceAt(i, item) => {
+                        let mut path = path.clone();
+                        path.push(i);
+    
+                        inner_diff(changes, &old.body[i], &new.body[i], path);
+                    },
                 }
             }
         }
@@ -70,7 +81,7 @@ pub fn diff(old: &Item, new: &Item) -> Vec<ClientAction> {
 
 #[cfg(test)]
 mod tests {
-    use crate::gui::{gui::{Item, Text, View, Button, TextInput, Checkbox}, types::{ClientAction, Replace, RemoveInx, AddBack}};
+    use crate::{gui::{gui::{Item, Text, View, Button, TextInput, Checkbox}, types::{ClientAction, Replace, RemoveInx, AddBack}}, AddFront, InsertAt};
 
     use super::diff;
 
@@ -106,7 +117,7 @@ mod tests {
     }
 
     #[test]
-    fn test_add_child() {
+    fn test_add_to_back() {
         let changes = diff(
             &Item::View(
                 View {
@@ -116,7 +127,8 @@ mod tests {
                                 text: "Hello".to_string(),
                             }
                         )
-                    ]
+                    ],
+                    ..Default::default()
                 }
             ),
             &Item::View(
@@ -132,15 +144,17 @@ mod tests {
                                 text: "World".to_string(),
                             }
                         )
-                    ]
+                    ],
+                    ..Default::default()
                 }
             )
         );
 
         assert_eq!(changes.len(), 1);
-        assert_eq!(changes[0], ClientAction::AddBack(
-            AddBack {
+        assert_eq!(changes[0], ClientAction::InsertAt(
+            InsertAt {
                 path: vec![],
+                inx: 0,
                 item: Item::Text(
                     Text {
                         text: "World".to_string(),
@@ -166,7 +180,8 @@ mod tests {
                                 text: "World".to_string(),
                             }
                         )
-                    ]
+                    ],
+                    ..Default::default()
                 }
             ),
             &Item::View(
@@ -177,7 +192,8 @@ mod tests {
                                 text: "Hello".to_string(),
                             }
                         )
-                    ]
+                    ],
+                    ..Default::default()
                 }
             )
         );
@@ -245,15 +261,18 @@ mod tests {
                                             title: "Hello".to_string()
                                         }
                                     )
-                                ]
+                                ],
+                                ..Default::default()
                             }
                         ),
                         Item::View(
                             View {
-                                body: vec![]
+                                body: vec![],
+                                ..Default::default()
                             }
                         )
-                    ]
+                    ],
+                    ..Default::default()
                 }
             ),
             &Item::View(
@@ -277,7 +296,8 @@ mod tests {
                                             title: "Hello".to_string()
                                         }
                                     )
-                                ]
+                                ],
+                                ..Default::default()
                             }
                         ),
                         Item::View(
@@ -291,16 +311,21 @@ mod tests {
                                                         text: "Newrow".to_string()
                                                     }
                                                 )
-                                            ]
+                                            ],
+                                            ..Default::default()
                                         }
                                     )
-                                ]
+                                ],
+                                ..Default::default()
                             }
                         )
-                    ]
+                    ],
+                    ..Default::default()
                 }
             )
         );
+
+        println!("{:?}", changes);
 
         assert_eq!(changes.len(), 2);
 
@@ -322,8 +347,8 @@ mod tests {
 
         let change = &changes[1];
 
-        assert_eq!(change, &ClientAction::AddBack(
-            AddBack {
+        assert_eq!(change, &ClientAction::AddFront(
+            AddFront {
                 path: vec![1],
                 item: Item::View(
                     View {
@@ -333,7 +358,8 @@ mod tests {
                                     text: "Newrow".to_string()
                                 }
                             )
-                        ]
+                        ],
+                        ..Default::default()
                     }
                 )
             }
@@ -364,7 +390,8 @@ mod tests {
                                             title: "Hello".to_string()
                                         }
                                     )
-                                ]
+                                ],
+                                ..Default::default()
                             }
                         ),
                         Item::View(
@@ -385,13 +412,16 @@ mod tests {
                                                         text: "Makkara".to_string()
                                                     }
                                                 )
-                                            ]
+                                            ],
+                                            ..Default::default()
                                         }
                                     )
-                                ]
+                                ],
+                                ..Default::default()
                             }
                         )
-                    ]
+                    ],
+                    ..Default::default()
                 }
             ),
             &Item::View(
@@ -415,7 +445,8 @@ mod tests {
                                             title: "Hello".to_string()
                                         }
                                     )
-                                ]
+                                ],
+                                ..Default::default()
                             }
                         ),
                         Item::View(
@@ -436,13 +467,16 @@ mod tests {
                                                         text: "Makkara".to_string()
                                                     }
                                                 )
-                                            ]
+                                            ],
+                                            ..Default::default()
                                         }
                                     )
-                                ]
+                                ],
+                                ..Default::default()
                             }
                         )
-                    ]
+                    ],
+                    ..Default::default()
                 }
             )
         );
@@ -457,6 +491,143 @@ mod tests {
                         name: "qwerty".to_string(),
                         placeholder: "Hello".to_string(), 
                         value: "newvalue".to_string()
+                    }
+                )
+            }
+        ));
+    }
+
+    #[test]
+    fn test_add_to_front() {
+        let changes = diff(
+            &Item::View(
+                View {
+                    body: vec![
+                        Item::Text(
+                            Text {
+                                text: "1".to_string()
+                            }
+                        ),
+                        Item::Text(
+                            Text {
+                                text: "2".to_string()
+                            }
+                        ),
+                        Item::Text(
+                            Text {
+                                text: "3".to_string()
+                            }
+                        )
+                    ],
+                    ..Default::default()
+                }
+            ),
+            &Item::View(
+                View {
+                    body: vec![
+                        Item::Text(
+                            Text {
+                                text: "0".to_string()
+                            }
+                        ),
+                        Item::Text(
+                            Text {
+                                text: "1".to_string()
+                            }
+                        ),
+                        Item::Text(
+                            Text {
+                                text: "2".to_string()
+                            }
+                        ),
+                        Item::Text(
+                            Text {
+                                text: "3".to_string()
+                            }
+                        )
+                    ],
+                    ..Default::default()
+                }
+            )
+        );
+
+        assert_eq!(changes.len(), 1);
+
+        assert_eq!(changes[0], ClientAction::AddFront(
+            AddFront {
+                path: vec![],
+                item: Item::Text(
+                    Text {
+                        text: "0".to_string()
+                    }
+                )
+            }
+        ));
+    }
+
+    #[test]
+    fn test_add_to_middle() {
+        let changes = diff(
+            &Item::View(
+                View {
+                    body: vec![
+                        Item::Text(
+                            Text {
+                                text: "1".to_string()
+                            }
+                        ),
+                        Item::Text(
+                            Text {
+                                text: "2".to_string()
+                            }
+                        ),
+                        Item::Text(
+                            Text {
+                                text: "3".to_string()
+                            }
+                        )
+                    ],
+                    ..Default::default()
+                }
+            ),
+            &Item::View(
+                View {
+                    body: vec![
+                        Item::Text(
+                            Text {
+                                text: "1".to_string()
+                            }
+                        ),
+                        Item::Text(
+                            Text {
+                                text: "0".to_string()
+                            }
+                        ),
+                        Item::Text(
+                            Text {
+                                text: "2".to_string()
+                            }
+                        ),
+                        Item::Text(
+                            Text {
+                                text: "3".to_string()
+                            }
+                        )
+                    ],
+                    ..Default::default()
+                }
+            )
+        );
+
+        assert_eq!(changes.len(), 1);
+
+        assert_eq!(changes[0], ClientAction::InsertAt(
+            InsertAt {
+                path: vec![],
+                inx: 0,
+                item: Item::Text(
+                    Text {
+                        text: "0".to_string()
                     }
                 )
             }
