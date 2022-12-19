@@ -40,9 +40,15 @@ export const renderItem = (item: Item, ctx: Context, old?: Element) => {
             }
 
             div.style.overflow = "auto"
-            div.style.display = "flex"
-            div.style.flexDirection = item.flexDirection
-            div.style.flexGrow = item.flex?.toString()
+            
+            if (item.flex) {
+                div.style.display = "flex"
+
+                const flex = item.flex
+
+                div.style.flexDirection = flex.direction
+                div.style.flexGrow = flex.grow.toString()
+            }
 
             for (const i of item.body) {
                 const el = renderItem(i, ctx)

@@ -134,9 +134,12 @@ const renderItem = (item, ctx, old)=>{
                     div.style.height = item.height + "px";
                 }
                 div.style.overflow = "auto";
-                div.style.display = "flex";
-                div.style.flexDirection = item.flexDirection;
-                div.style.flexGrow = item.flex?.toString();
+                if (item.flex) {
+                    div.style.display = "flex";
+                    const flex = item.flex;
+                    div.style.flexDirection = flex.direction;
+                    div.style.flexGrow = flex.grow.toString();
+                }
                 for (const i1 of item.body){
                     const el1 = renderItem(i1, ctx);
                     div.appendChild(el1);

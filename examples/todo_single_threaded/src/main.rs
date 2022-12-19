@@ -50,7 +50,6 @@ fn render_page(todolist: &Todolist) -> Item {
         rows.push(
             Item::View(
                 View {
-                    flex_direction: FlexDirection::Row,
                     flex: None,
                     body: vec![
                         Item::Checkbox(
@@ -74,12 +73,10 @@ fn render_page(todolist: &Todolist) -> Item {
 
     Item::View(
         View {
-            flex_direction: FlexDirection::Column,
             flex: None,
             body: vec![
                 Item::View(
                     View {
-                        flex_direction: FlexDirection::Row,
                         flex: None,
                         body: vec![
                             Item::TextInput(
@@ -103,7 +100,6 @@ fn render_page(todolist: &Todolist) -> Item {
                 ),
                 Item::View(
                     View {
-                        flex_direction: FlexDirection::Column,
                         flex: None,
                         body: rows,
                         ..Default::default()

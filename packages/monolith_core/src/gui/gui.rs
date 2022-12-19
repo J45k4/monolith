@@ -13,10 +13,15 @@ impl Default for FlexDirection {
 }
 
 #[derive(Debug, PartialEq, Clone, Default, serde::Serialize, serde::Deserialize)]
-pub struct View {
+pub struct Flex {
     #[serde(rename = "flexDirection")]
-    pub flex_direction: FlexDirection,
-    pub flex: Option<u32>,
+    pub direction: FlexDirection,
+    pub grow: Option<u32>,
+}
+
+#[derive(Debug, PartialEq, Clone, Default, serde::Serialize, serde::Deserialize)]
+pub struct View {
+    pub flex: Option<Flex>,
     pub height: Option<u32>,
     pub width: Option<u32>,
     pub body: Vec<Item>
