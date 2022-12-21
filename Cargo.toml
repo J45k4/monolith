@@ -4,5 +4,6 @@ members = [
     "./packages/monolith_core",
     "./packages/monolith",
     "./examples/todo",
-    "./examples/todo_single_threaded"
+    "./examples/todo_single_threaded",
+    "./examples/notes"
 ]

@@ -120,7 +120,7 @@ fn render_page(todolist: &Todolist) -> Item {
 struct TodoApp {
     todolist: Todolist,
     receivers: SelectAll<ClientReceiver>,
-    monolith: Monolith<()>,
+    monolith: Monolith,
     writers: HashMap<usize, ClientWriter>
     // client_futures: FuturesUnordered<Box<dyn Future<Output = (Option<ClientEvent>, Client)>>>
 }
