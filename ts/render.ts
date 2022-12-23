@@ -51,7 +51,10 @@ export const renderItem = (item: Item, ctx: Context, old?: Element) => {
                 const flex = item.flex
 
                 div.style.flexDirection = flex.direction
-                div.style.flexGrow = flex.grow.toString()
+                
+                if (flex.grow) {
+                    div.style.flexGrow = flex.grow.toString()
+                }
             }
 
             for (const i of item.body) {

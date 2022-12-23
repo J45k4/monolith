@@ -142,7 +142,9 @@ const renderItem = (item, ctx, old)=>{
                     div.style.display = "flex";
                     const flex = item.flex;
                     div.style.flexDirection = flex.direction;
-                    div.style.flexGrow = flex.grow.toString();
+                    if (flex.grow) {
+                        div.style.flexGrow = flex.grow.toString();
+                    }
                 }
                 for (const i1 of item.body){
                     const el1 = renderItem(i1, ctx);
