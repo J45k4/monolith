@@ -95,12 +95,24 @@ export type RemoveInx = {
     path: number[]
 }
 
+export type PushState = {
+    type: "pushState"
+    url: string
+}
+
+export type ReplaceState = {
+    type: "replaceState"
+    url: string
+}
+
 export type SrvMessage = Replace |
     ReplaceAt |
     AddBack | 
     AddFront | 
     InsertAt | 
-    RemoveInx
+    RemoveInx |
+    PushState |
+    ReplaceState
 
 export type OnClick = {
     type: "onClick"
@@ -122,14 +134,15 @@ export type OnKeyDown = {
     keycode: string
 }
 
-export type ParametersChanged = {
-    type: "parametersChanged"
-    params: any
-    query: any
-    headers: any
+export type PathChanged = {
+    type: "pathChanged"
+    path: string
 }
 
-export type MessageToSrv = OnClick | OnTextChange | OnKeyDown | ParametersChanged
+export type MessageToSrv = OnClick | 
+    OnTextChange | 
+    OnKeyDown | 
+    PathChanged
 
 export type MessagesToSrv = MessageToSrv[]
 

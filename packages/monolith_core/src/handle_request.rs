@@ -24,8 +24,8 @@ const index_js_bytes: &[u8] = include_bytes!("../../../public/index.js");
 
 #[derive(Clone)]
 pub struct RequestContext {
-    pub tx: mpsc::Sender<Client>,
     pub next_client_id: Arc<AtomicUsize>,
+    pub client_sender: mpsc::Sender<Client>
 }
 
 pub async fn handle_request(mut req: Request<Body>, ctx: RequestContext) -> Result<Response<Body>, anyhow::Error> {
@@ -45,6 +45,8 @@ pub async fn handle_request(mut req: Request<Body>, ctx: RequestContext) -> Resu
         match req.uri().path() {
             "/ui" => {
                 let client = create_ui_client(id, websocket);
+
+                ctx.client_sender.send(client).await.unwrap();
             },
             &_ | _ => {
                 bail!("not allowed url")

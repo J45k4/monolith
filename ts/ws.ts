@@ -51,13 +51,16 @@ export const connectWebsocket = (args: {
 
     createConnection()
 
-    return () => {
-        logger.debug("close")
+    return {
+        close: () => {
+            logger.debug("close")
 
-        if (!ws) {
-            return
-        }
+            if (!ws) {
+                return
+            }
 
-        ws.close()
+            ws.close()
+        },
+        sender
     }
 }

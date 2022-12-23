@@ -13,34 +13,9 @@ use super::{types::ClientEvent, gui::Item};
 
 #[derive(Debug)]
 enum Command {
-    Render(Item)
+    Render(Item),
+    Navigate(String)
 }
-
-// fn render(
-//     tx: &mpsc::UnboundedSender<String>,
-//     shared: &mut Shared,
-//     new_root: Item
-// ) {
-//     let changes = match shared.last_root.as_ref() {
-//         Some(last_root) => diff(last_root, &new_root),
-//         None => vec![ClientAction::Replace(Replace { path: vec![], item: new_root.clone() })]
-//     };
-
-//     if changes.len() == 0 {
-//         return;
-//     }
-
-//     shared.last_root.replace(new_root.clone());
-
-//     log::info!("sending changes: {:?}", changes);
-
-//     let str = serde_json::to_string(&changes).unwrap();
-
-//     match tx.send(str) {
-//         Ok(_) => {},
-//         Err(_) => {},
-//     }
-// }
 
 pub struct ClientRenderer {
     cmd_sender: mpsc::UnboundedSender<Command>
@@ -80,6 +55,14 @@ impl ClientWriter {
 
         self.cmd_sender.send(
             Command::Render(root)
+        ).unwrap();
+    }
+
+    pub async fn navigate(&self, url: String) {
+        log::info!("navigate to {}", url);
+
+        self.cmd_sender.send(
+            Command::Navigate(url)
         ).unwrap();
     }
 }
@@ -150,7 +133,7 @@ impl Client {
 
 struct Worker {
     ws: WebSocketStream<Upgraded>,
-    cmd_rev: mpsc::UnboundedReceiver<Command>,
+    cmd_recv: mpsc::UnboundedReceiver<Command>,
     event_sender: mpsc::UnboundedSender<ClientEvent>,
     last_root: Option<Item>
 }
@@ -159,6 +142,8 @@ impl Worker {
     pub async fn handle_websocket(&mut self, msg: Message) -> anyhow::Result<()> {
         match msg {
             Message::Text(msg) => {
+                log::info!("recieved message: {}", msg);
+
                 let msgs: Vec<ClientEvent> = serde_json::from_str(&msg)?;
 
                 log::info!("received messages: {:?}", msgs);
@@ -194,29 +179,92 @@ impl Worker {
         Ok(())
     }
 
+    async fn handle_command(&mut self, cmd: Command) -> anyhow::Result<()> {
+        match cmd {
+            Command::Render(root) => {
+                log::info!("rendering root: {:?}", root);
+
+                let changes = match &self.last_root {
+                    Some(last_root) => {
+                        let changes = diff(&last_root, &root);
+
+                        changes
+                    },
+                    None => vec![ClientAction::Replace(Replace { path: vec![], item: root.clone() })]
+                };
+
+                if changes.len() == 0 {
+                    return Ok(());
+                }
+
+                self.last_root = Some(root);
+            
+                log::info!("sending changes: {:?}", changes);
+            
+                let str = serde_json::to_string(&changes).unwrap();
+            
+                self.ws.send(Message::text(str)).await?;
+            }
+            Command::Navigate(url) => {
+                let changes = vec![
+                    ClientAction::PushState(
+                        crate::PushState { url: url.clone() }
+                    )
+                ];
+
+                let msg = serde_json::to_string(&changes)?;
+
+                self.ws.send(Message::text(msg)).await?;
+            }
+        };
+
+        Ok(())
+    }
+
     pub async fn run(mut self) {
         loop {
-            match self.ws.next().await {
-                Some(msg) => match msg {
-                    Ok(msg) => {
-                        match self.handle_websocket(msg).await {
-                            Ok(_) => {},
-                            Err(err) => {
-                                log::error!("Error handling websocket message: {}", err);
+            tokio::select! {
+                msg = self.ws.next() => {
+                    match msg {
+                        Some(msg) => match msg {
+                            Ok(msg) => {
+                                match self.handle_websocket(msg).await {
+                                    Ok(_) => {},
+                                    Err(err) => {
+                                        log::error!("Error handling websocket message: {}", err);
+                                    },
+                                }
                             },
+                            Err(err) => {
+                                log::error!("Error receiving websocket message: {}", err);
+            
+                                break;
+                            },
+                        },
+                        None => {
+                            log::error!("Websocket closed");
+            
+                            break;
+                        },
+                    }   
+                }
+                cmd = self.cmd_recv.recv() => {
+                    match cmd {
+                        Some(cmd) => {
+                            match self.handle_command(cmd).await {
+                                Ok(_) => {},
+                                Err(err) => {
+                                    log::error!("Error handling command: {}", err);
+                                }
+                            }
                         }
-                    },
-                    Err(err) => {
-                        log::error!("Error receiving websocket message: {}", err);
-    
-                        break;
-                    },
-                },
-                None => {
-                    log::error!("Websocket closed");
-    
-                    break;
-                },
+                        None => {
+                            log::error!("Command channel closed");
+
+                            break;
+                        }
+                    }
+                }
             };
         }
     }
@@ -232,7 +280,7 @@ pub fn create_ui_client(id: usize, websocket: HyperWebsocket) -> Client {
 
         Worker { 
             ws: ws,
-            cmd_rev: cmd_receiver,
+            cmd_recv: cmd_receiver,
             event_sender: event_sender,
             last_root: None
         }.run().await;
@@ -244,34 +292,3 @@ pub fn create_ui_client(id: usize, websocket: HyperWebsocket) -> Client {
         event_receiver: event_receiver
     }
 }
-
-        // let results = if let Some(last_root) = last_root.as_ref() {
-        //     log::info!("comparing last root with new root");
-             
-        //     let changes = diff(last_root, &root);
-
-        //     for change in changes {
-        //         let msg = serde_json::to_string(&change).unwrap();
-        //         self.tx.send(msg).unwrap();
-        //     }
-        // } else {
-        //     let msg = serde_json::to_string(&ClientAction::Replace(Replace {
-        //         path: Vec::new(),
-        //         item: root.clone()
-        //     })).unwrap();
-
-        //     log::info!("Sending initial root: {}", msg);
-
-            
-        // }
-
-        // let msg = ClientAction::Replace(
-        //     Replace {
-        //         path: vec![], 
-        //         item: root
-        //     }
-        // );
-
-        // let str = serde_json::to_string(&msg).unwrap();
-
-        // self.tx.send(str).unwrap();

@@ -32,8 +32,12 @@ window.onload = () => {
 
     const debouncer = new Deboncer()
 
-    connectWebsocket({
+    const {
+        sender
+    } = connectWebsocket({
         onMessage:  (sender, msgs: SrvMessage[]) => { 
+            logger.info("root", root)
+
             const ctx: Context = {
                 sender,
                 debouncer
@@ -41,6 +45,24 @@ window.onload = () => {
             
             for (const message of msgs) {
                 logger.info("process", message)
+
+                if (message.type === "pushState") {
+                    history.pushState({}, "", message.url)
+
+                    sender.send({
+                        type: "pathChanged",
+                        path: location.pathname,
+                    })
+                    sender.sendNow()
+
+                    continue
+                }
+
+                if (message.type === "replaceState") {
+                    history.replaceState({}, "", message.url)
+
+                    continue
+                }
     
                 const element = getPathItem(message.path, root)
     
@@ -109,14 +131,24 @@ window.onload = () => {
             logger.info("onOpen", params)
 
             sender.send({
-                type: "parametersChanged",
-                params: [],
-                query: {},
-                headers: {}
+                type: "pathChanged",
+                path: location.pathname,
             })
 
             sender.sendNow()
         }
     })
-        
+
+    window.addEventListener("popstate", (evet) => {
+        const params = new URLSearchParams(location.href)
+
+        logger.info("url changed", location.href)
+
+        sender.send({
+            type: "pathChanged",
+            path: location.pathname,
+        })
+
+        sender.sendNow()
+    })        
 }

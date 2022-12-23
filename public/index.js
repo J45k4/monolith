@@ -99,7 +99,7 @@ const getPathItem = (path, element)=>{
     const child = element.children[p];
     logger1.info("child", child);
     if (!child) {
-        logger1.info(`child not found: ${p}`);
+        logger1.info(`child not found with path ${p}`);
         return;
     }
     logger1.info(`child found: ${p}`);
@@ -110,11 +110,15 @@ const renderItem = (item, ctx, old)=>{
     outerLogger.info("renderItem", item, old);
     switch(item.type){
         case "text":
-            if (old instanceof Text) {
-                old.textContent = item.text;
-                return;
+            {
+                if (old instanceof HTMLSpanElement) {
+                    old.innerHTML = item.text;
+                    return;
+                }
+                const span = document.createElement("span");
+                span.innerText = item.text;
+                return span;
             }
-            return document.createTextNode(item.text);
         case "view":
             {
                 outerLogger.info("render view");
@@ -312,12 +316,15 @@ const connectWebsocket = (args)=>{
         };
     };
     createConnection();
-    return ()=>{
-        logger3.debug("close");
-        if (!ws) {
-            return;
-        }
-        ws.close();
+    return {
+        close: ()=>{
+            logger3.debug("close");
+            if (!ws) {
+                return;
+            }
+            ws.close();
+        },
+        sender
     };
 };
 const logger4 = createLogger("app");
@@ -337,14 +344,28 @@ window.onload = ()=>{
     content.appendChild(root);
     logger4.info("root", res);
     const debouncer = new Deboncer();
-    connectWebsocket({
+    const { sender  } = connectWebsocket({
         onMessage: (sender, msgs)=>{
+            logger4.info("root", root);
             const ctx = {
                 sender,
                 debouncer
             };
             for (const message of msgs){
                 logger4.info("process", message);
+                if (message.type === "pushState") {
+                    history.pushState({}, "", message.url);
+                    sender.send({
+                        type: "pathChanged",
+                        path: location.pathname
+                    });
+                    sender.sendNow();
+                    continue;
+                }
+                if (message.type === "replaceState") {
+                    history.replaceState({}, "", message.url);
+                    continue;
+                }
                 const element = getPathItem(message.path, root);
                 logger4.info("element", element);
                 if (!element) {
@@ -396,12 +417,19 @@ window.onload = ()=>{
             const params = new URLSearchParams(location.href);
             logger4.info("onOpen", params);
             sender.send({
-                type: "parametersChanged",
-                params: [],
-                query: {},
-                headers: {}
+                type: "pathChanged",
+                path: location.pathname
             });
             sender.sendNow();
         }
+    });
+    window.addEventListener("popstate", (evet)=>{
+        new URLSearchParams(location.href);
+        logger4.info("url changed", location.href);
+        sender.send({
+            type: "pathChanged",
+            path: location.pathname
+        });
+        sender.sendNow();
     });
 };

@@ -30,17 +30,15 @@ pub struct OnKeyDown {
 }
 
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
-pub struct ParametersChanged {
-    pub query: HashMap<String, String>,
-    pub params: Vec<String>,
-    pub headers: HashMap<String, String>,
+pub struct PathChanged {
+    pub path: String,
 }
 
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum ClientEvent { 
     Disconnected,
-    ParametersChanged(ParametersChanged),
+    PathChanged(PathChanged),
     OnClick(OnClick),
     OnTextChanged(OnTextChanged),
     OnKeyDown(OnKeyDown)
@@ -86,6 +84,18 @@ pub struct RemoveInx {
     pub inx: usize
 }
 
+
+#[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
+pub struct PushState {
+    pub url: String,
+}
+
+
+#[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ReplaceState {
+    pub url: String,
+}
+
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum ClientAction {
@@ -95,4 +105,6 @@ pub enum ClientAction {
     AddFront(AddFront),
     InsertAt(InsertAt),
     RemoveInx(RemoveInx),
+    PushState(PushState),
+    ReplaceState(ReplaceState),
 }

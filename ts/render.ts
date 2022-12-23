@@ -7,14 +7,18 @@ export const renderItem = (item: Item, ctx: Context, old?: Element) => {
     outerLogger.info("renderItem", item, old)
 
     switch (item.type) {
-        case "text":
-            if (old instanceof Text) {
-                old.textContent = item.text
+        case "text": {
+            if (old instanceof HTMLSpanElement) {
+                old.innerHTML = item.text
 
                 return
             }
 
-            return document.createTextNode(item.text)
+            const span = document.createElement("span")
+
+            span.innerText = item.text
+            return span
+        }
         case "view": {
             outerLogger.info("render view")
 

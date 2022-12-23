@@ -20,7 +20,7 @@ export const getPathItem = (path: number[], element: any): Element | undefined =
     logger.info("child", child)
 
     if (!child) {
-        logger.info(`child not found: ${p}`)
+        logger.info(`child not found with path ${p}`)
 
         return
     }

@@ -117,7 +117,7 @@ async fn main() {
 
     let mut todolist = Todolist::new();
 
-    let mut monolith = MonolithBuilder::new().build().single_threaded();
+    let mut monolith = MonolithBuilder::new().build();
 
     while let Some((writer, event)) = monolith.recv_next().await {
         match event {

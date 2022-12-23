@@ -28,18 +28,16 @@ use crate::handle_request::RequestContext;
 use crate::{gui::Client};
 
 struct Worker {
-    tx: mpsc::Sender<Client>,
+    client_sender: mpsc::Sender<Client>,
     stopper_recv: oneshot::Receiver<()>,
     port: u16
 }
 
 impl Worker {
     async fn run(self) {
-        let tx = self.tx.clone();
-
         let ctx = RequestContext {
-            tx: self.tx,
             next_client_id: Arc::new(AtomicUsize::new(0)),
+            client_sender: self.client_sender
         };
         
         let make_scv = {
@@ -73,40 +71,10 @@ impl Worker {
 
         log::info!("binding server to port {}", self.port);
 
-        // let (addr, fut) = server.bind_with_graceful_shutdown(([127, 0, 0, 1], self.port), async move {
-        //     self.stopper_recv.await.unwrap();
-
-        //     log::info!("shutting down server");
-        // }); 
-
-        // log::info!("websocket server listening on {}", addr);
-
-        // fut.await;
-
         if let Err(e) = server.await {
             log::error!("server error: {}", e);
         }
     }
-}
-
-fn create_worker(port: u16) -> (mpsc::Receiver<Client>, oneshot::Sender<()>, JoinHandle<()>) {
-    let (tx, rx) = mpsc::channel(100);
-
-    let (stopper_send, stopper_recv) = oneshot::channel::<()>();
-
-    let wait = tokio::spawn(async move {
-        log::info!("starting worker");
-
-        let worker = Worker {
-            tx,
-            stopper_recv,
-            port: port
-        };
-
-        worker.run().await;
-    });
-
-    (rx, stopper_send, wait)
 }
 
 struct Internal {
@@ -139,12 +107,29 @@ impl MonolithBuilder {
     }
 
     pub fn build(self) -> Monolith {
-        let (rx, stopper_send, wait) = create_worker(self.port);
+        let (client_sender, client_receiver) = mpsc::channel(100);
+        let (stopper_send, stopper_recv) = oneshot::channel::<()>();
+
+        let wait = tokio::spawn(async move {
+            log::info!("starting worker");
+
+            let worker = Worker {
+                client_sender: client_sender,
+                stopper_recv,
+                port: self.port
+            };
+
+            worker.run().await;
+        });
+
 
         Monolith {
-            rx: rx,
+            client_receiver: client_receiver,
             stopper: stopper_send,
             wait: wait,
+            receivers: SelectAll::new(),
+            writers: HashMap::new()
+            
             // interal: intertal
         }
     }
@@ -202,22 +187,53 @@ impl SingleMonolith {
 }
 
 pub struct Monolith {
-    rx: mpsc::Receiver<Client>,
+    client_receiver: mpsc::Receiver<Client>,
     stopper: oneshot::Sender<()>,
     wait: JoinHandle<()>,
+    receivers: SelectAll<ClientReceiver>,
+    writers: HashMap<usize, ClientWriter>,
 }
 
 impl Monolith
 {
     pub async fn accept_client(&mut self) -> Option<Client> {
-        self.rx.recv().await
+        self.client_receiver.recv().await
+    }
+
+    pub fn get_writers(&self) -> &HashMap<usize, ClientWriter> {
+        &self.writers
+    }
+
+    pub async fn recv_next(&mut self) -> Option<(ClientWriter, ClientEvent)> {
+        loop {
+            tokio::select! {
+                Some(client) = self.client_receiver.recv() => {
+                    let id = client.id();
+
+                    let (writer, receiver) = client.split();
+
+                    self.receivers.push(receiver);
+
+                    self.writers.insert(id, writer);
+                },
+                Some((id, event)) = self.receivers.next() => {
+                    let writer = self.writers.get(&id).unwrap();
+
+                    break Some((writer.clone(), event));
+                }
+            };
+        }
+    }
+
+    pub async fn stop(self) {
+        self.stopper.send(()).unwrap();
     }
 
     pub async fn wait(self) {
         self.wait.await;
     }
 
-    pub fn single_threaded(self) -> SingleMonolith {
-        SingleMonolith::new(self.rx, self.stopper)
-    }
+    // pub fn single_threaded(self) -> SingleMonolith {
+    //     SingleMonolith::new(self.rx, self.stopper)
+    // }
 }
