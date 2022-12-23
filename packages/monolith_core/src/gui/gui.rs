@@ -27,10 +27,10 @@ pub struct View {
     pub body: Vec<Item>
 }
 
-#[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, PartialEq, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Button {
-    pub id: String,
-    pub name: String,
+    pub id: Option<String>,
+    pub name: Option<String>,
     pub title: String,
 }
 

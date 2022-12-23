@@ -54,8 +54,8 @@ pub fn render_page(state: &State) -> Item {
             body: vec![
                 Item::Button(
                     Button {
-                        name: "create_note".to_string(),
-                        id: "create_note".to_string(),
+                        name: Some("create_note".to_string()),
+                        id: Some("create_note".to_string()),
                         title: "Create note".to_string(),
                     }
                 ),
