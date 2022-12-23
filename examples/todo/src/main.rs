@@ -95,9 +95,9 @@ fn render_page(todolist: &Todolist) -> Item {
                             ),
                             Item::Button(
                                 Button {
-                                    name: "add".to_string(),
-                                    id: "add".to_string(),
+                                    name: Some("add".to_string()),
                                     title: "Add".to_string(),
+                                    ..Default::default()
                                 }
                             )
                         ],
@@ -164,23 +164,27 @@ impl TodoApp {
                 self.writers.remove(&client_id);
             },
             ClientEvent::OnClick(o) => {
-                match o.name.as_str() {
-                    "add" => {
-                        self.todolist.add(self.todolist.new_item_name.clone());
-                        self.todolist.new_item_name = "".to_string();
-                    },
-                    "completed" => {
-                        self.todolist.toggle(o.id);
-                    },
-                    _ => {}
+                if let Some(name) = o.name {
+                    match name.as_str() {
+                        "add" => {
+                            self.todolist.add(self.todolist.new_item_name.clone());
+                            self.todolist.new_item_name = "".to_string();
+                        },
+                        "completed" => {
+                            self.todolist.toggle(o.id.unwrap());
+                        },
+                        _ => {}
+                    }
                 }
             },
             ClientEvent::OnTextChanged(o) => {
-                match o.name.as_str() {
-                    "newTodoItemName" => {
-                        self.todolist.new_item_name = o.value;
-                    },
-                    _ => {}
+                if let Some(name) = o.name {
+                    match name.as_str() {
+                        "newTodoItemName" => {
+                            self.todolist.new_item_name = o.value;
+                        },
+                        _ => {}
+                    }
                 }
             },
             ClientEvent::OnKeyDown(event) => {

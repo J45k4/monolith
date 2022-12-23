@@ -23,14 +23,16 @@ async fn main() {
                state.path = p.path;
             },
             ClientEvent::OnClick(o) => {
-                match o.name.as_str() {
-                    "create_note" => {
-                        let not = state.create_new_note();
-                        let path = format!("/note/{}", not.id);
-
-                        writer.navigate(path).await;
-                    },
-                    _ => {}
+                if let Some(name) = o.name {
+                    match name.as_str() {
+                        "create_note" => {
+                            let not = state.create_new_note();
+                            let path = format!("/note/{}", not.id);
+    
+                            writer.navigate(path).await;
+                        },
+                        _ => {}
+                    }
                 }
             }
             _ => {}

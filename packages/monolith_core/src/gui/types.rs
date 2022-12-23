@@ -5,14 +5,14 @@ use super::gui::Item;
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub struct OnClick {
-    pub id: String,
-    pub name: String
+    pub id: Option<String>,
+    pub name: Option<String>
 }
 
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
 pub struct OnTextChanged {
-    pub id: String,
-    pub name: String,
+    pub id: Option<String>,
+    pub name: Option<String>,
     pub value: String,
 }
 
@@ -25,7 +25,7 @@ pub enum MsgFromClient {
 
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
 pub struct OnKeyDown {
-    pub id: String,
+    pub id: Option<String>,
     pub keycode: String
 }
 
