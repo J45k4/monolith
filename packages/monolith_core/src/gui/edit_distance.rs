@@ -1,17 +1,24 @@
 
 
 
-use std::{cmp::min, fmt::Debug};
+use std::{cmp::min, fmt::Debug, vec};
+
+use log::log_enabled;
 
 #[derive(Debug, PartialEq)]
 pub enum EditOperation<T> {
     InsertFirst(T),
-    InsertAt(usize, T),
+    InsertAfter(usize, T),
+    InsertBack(T),
     RemoveAt(usize),
     ReplaceAt(usize, T),
 }
 
-pub fn get_minimum_edits<T: PartialEq + Clone>(s: &Vec<T>, t: &Vec<T>) -> Vec<EditOperation<T>> {
+pub fn get_minimum_edits<T: PartialEq + Clone + Debug>(s: &Vec<T>, t: &Vec<T>) -> Vec<EditOperation<T>> {
+    log::trace!("get minimum edits");
+    log::trace!("{:?}", s);
+    log::trace!("{:?}", t);
+
     let m = s.len();
     let n = t.len();
     let mut dp = vec![vec![0; n + 1]; m + 1];
@@ -35,27 +42,53 @@ pub fn get_minimum_edits<T: PartialEq + Clone>(s: &Vec<T>, t: &Vec<T>) -> Vec<Ed
         }
     }
 
+    if log_enabled!(log::Level::Trace) {
+        log::trace!("DP table:");
+
+        for i in 0..=m {
+            let mut row = vec![];
+
+            for j in 0..=n {
+                row.push(dp[i][j]);
+            }
+
+            log::trace!("{:?}", row)
+        }
+    }
+
     // Initialize the list of edit operations
     let mut edits = Vec::new();
+
+    let mut it = 1;
+
+    log::trace!("backtracking edit operations");
 
     // Backtrack to generate the list of edit operations
     let mut i = m;
     let mut j = n;
     while i > 0 || j > 0 {
+        log::trace!("");
+        log::trace!("Iteration {}", it);
+        it += 1;
+        log::trace!("i = {}, j = {} val = {:?}", i, j, dp[i][j]);
+
         if i == 0 {
             // Insert t[j - 1]
+            log::trace!("Insert first {:?}", t[j - 1]);
             edits.push(EditOperation::InsertFirst(t[j - 1].clone()));
             j -= 1;
 
             continue;
         } else if j == 0 {
             // Delete s[i - 1]
+            log::trace!("Remove {:?} at {}", s[i - 1], i - 1);
             edits.push(EditOperation::RemoveAt(i - 1));
             i -= 1;
 
             continue;
         } else if s[i - 1] == t[j - 1] {
             // No operation required
+            log::trace!("No operation required");
             i -= 1;
             j -= 1;
 
@@ -67,20 +100,25 @@ pub fn get_minimum_edits<T: PartialEq + Clone>(s: &Vec<T>, t: &Vec<T>) -> Vec<Ed
         let diag = dp[i - 1][j - 1];
 
         if diag < top && diag < left {
+            log::trace!("Replace {:?} with {:?}", s[i - 1], t[j - 1]);
             edits.push(EditOperation::ReplaceAt(i - 1, t[j - 1].clone()));
             i -= 1;
             j -= 1;
         } else if top < left {
+            log::trace!("Remove {:?} at {}", s[i - 1], i - 1);
             edits.push(EditOperation::RemoveAt(i - 1));
             i -= 1;
         } else {
-            edits.push(EditOperation::InsertAt(i - 1, t[j - 1].clone()));
+            log::trace!("Insert at {:?}", t[j - 1]);
+            edits.push(EditOperation::InsertAfter(i - 1, t[j - 1].clone()));
             j -= 1;
         }
     }
 
+    log::trace!("edits {:?}", edits);
+
     // Reverse the list of edit operations to get the correct order
-    edits.reverse();
+    // edits.reverse();
 
     edits
 }
@@ -105,7 +143,7 @@ mod tests {
         let b = vec![1, 2, 3, 4];
         let edits = get_minimum_edits(&a, &b);
     
-        assert_eq!(edits, vec![EditOperation::InsertAt(2, 4)]);
+        assert_eq!(edits, vec![EditOperation::InsertAfter(2, 4)]);
     }
     
     #[test]
@@ -114,7 +152,7 @@ mod tests {
         let b = vec![1, 2, 4, 3];
         let edits = get_minimum_edits(&a, &b);
     
-        assert_eq!(edits, vec![EditOperation::InsertAt(1, 4)]);
+        assert_eq!(edits, vec![EditOperation::InsertAfter(1, 4)]);
     }
     
     #[test]
@@ -178,7 +216,7 @@ mod tests {
         let b = vec![4, 5, 6];
         let edits = get_minimum_edits(&a, &b);
     
-        assert_eq!(edits, vec![EditOperation::ReplaceAt(0, 4), EditOperation::ReplaceAt(1, 5), EditOperation::ReplaceAt(2, 6)]);
+        assert_eq!(edits, vec![EditOperation::ReplaceAt(2, 6), EditOperation::ReplaceAt(1, 5), EditOperation::ReplaceAt(0, 4)]);
     }
 
     #[test]
@@ -188,7 +226,7 @@ mod tests {
 
         let edits = get_minimum_edits(&a, &b);
     
-        assert_eq!(edits, vec![EditOperation::InsertFirst(3), EditOperation::RemoveAt(2)]);
+        assert_eq!(edits, vec![EditOperation::RemoveAt(2), EditOperation::InsertFirst(3)]);
     }
 
     #[test]
@@ -200,9 +238,24 @@ mod tests {
 
         assert_eq!(edits, 
             vec![
-                EditOperation::ReplaceAt(0, 'k'),
-                EditOperation::ReplaceAt(4, 'e'),
                 EditOperation::RemoveAt(6),
+                EditOperation::ReplaceAt(4, 'e'),
+                EditOperation::ReplaceAt(0, 'k')
+            ]
+        );
+    }
+
+    #[test]
+    fn test_replace_one_with_two() {
+        let old = "A";
+        let new = "BC";
+
+        let edits = get_minimum_edits(&old.chars().collect::<Vec<_>>(), &new.chars().collect::<Vec<_>>());
+
+        assert_eq!(edits, 
+            vec![
+                EditOperation::ReplaceAt(0, 'C'),
+                EditOperation::InsertFirst('B'),
             ]
         );
     }

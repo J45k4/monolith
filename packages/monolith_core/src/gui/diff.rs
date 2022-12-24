@@ -5,15 +5,19 @@ use super::{gui::Item, types::ItemPath};
 
 
 fn inner_diff(changes: &mut Vec<ClientAction>, old: &Item, new: &Item, path: ItemPath) {
-    log::debug!("diff: {:?} -> {:?}", old, new);
+    log::trace!("{:?} inner_dif", path);
 
     match (old, new) {
         (Item::View(old), Item::View(new)) => {
+            log::trace!("{:?} inner_diff calculating view minumum edits", path);
+
             let edits = get_minimum_edits(&old.body, &new.body);
 
             for edit in edits {
                 match edit {
                     EditOperation::InsertFirst(item) => {
+                        log::trace!("{:?} insert first", path);
+
                         changes.push(
                             ClientAction::AddFront(
                                 AddFront {
@@ -23,7 +27,9 @@ fn inner_diff(changes: &mut Vec<ClientAction>, old: &Item, new: &Item, path: Ite
                             )
                         );
                     },
-                    EditOperation::InsertAt(index, item) => {
+                    EditOperation::InsertAfter(index, item) => {
+                        log::trace!("{:?} insert after {}", path, index);
+
                         changes.push(
                             ClientAction::InsertAt(
                                 InsertAt {
@@ -35,6 +41,8 @@ fn inner_diff(changes: &mut Vec<ClientAction>, old: &Item, new: &Item, path: Ite
                         );
                     },
                     EditOperation::RemoveAt(index) => {
+                        log::trace!("{:?} remove at index {}", path, index);
+
                         changes.push(
                             ClientAction::RemoveInx(
                                 RemoveInx {
@@ -45,16 +53,29 @@ fn inner_diff(changes: &mut Vec<ClientAction>, old: &Item, new: &Item, path: Ite
                         );
                     },
                     EditOperation::ReplaceAt(i, item) => {
+                        log::trace!("{:?} replace at {}", path, i);
+
                         let mut path = path.clone();
                         path.push(i);
+
+                        log::trace!("{:?} new path: {:?}", path, path);
     
                         inner_diff(changes, &old.body[i], &new.body[i], path);
                     },
+                    EditOperation::InsertBack(item) => {
+                        log::trace!("{:?} insert back", path);
+
+                        todo!();
+                    }
                 }
             }
         }
         _ => {
+            log::trace!("{:?} comparing old and new", path);
+
             if old != new {
+                log::trace!("{:?} old and new are different", path);
+
                 changes.push(
                     ClientAction::Replace(
                         Replace {
@@ -69,6 +90,10 @@ fn inner_diff(changes: &mut Vec<ClientAction>, old: &Item, new: &Item, path: Ite
 }
 
 pub fn diff(old: &Item, new: &Item) -> Vec<ClientAction> {
+    log::trace!("diff");
+    log::trace!("{:?}", old);
+    log::trace!("{:?}", new);
+
     let mut changes = Vec::new();
     let mut path = Vec::new();
 
@@ -81,7 +106,7 @@ pub fn diff(old: &Item, new: &Item) -> Vec<ClientAction> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{gui::{gui::{Item, Text, View, Button, TextInput, Checkbox}, types::{ClientAction, Replace, RemoveInx, AddBack}}, AddFront, InsertAt};
+    use crate::{gui::{gui::{Item, Text, View, Button, TextInput, Checkbox}, types::{ClientAction, Replace, RemoveInx, AddBack}}, AddFront, InsertAt, ReplaceAt, test_util::enable_trace};
 
     use super::diff;
 
@@ -212,8 +237,8 @@ mod tests {
         let changes = diff(
             &Item::Button(
                 Button {
-                    id: "qwerty".to_string(),
-                    name: "qwerty".to_string(),
+                    id: None,
+                    name: None,
                     title: "Hello".to_string()
                 }
             ),
@@ -256,8 +281,8 @@ mod tests {
                                     ),
                                     Item::Button(
                                         Button {
-                                            id: "qwerty".to_string(),
-                                            name: "qwerty".to_string(),
+                                            id: Some("qwerty".to_string()),
+                                            name: Some("qwerty".to_string()),
                                             title: "Hello".to_string()
                                         }
                                     )
@@ -291,8 +316,8 @@ mod tests {
                                     ),
                                     Item::Button(
                                         Button {
-                                            id: "qwerty".to_string(),
-                                            name: "qwerty".to_string(),
+                                            id: Some("qwerty".to_string()),
+                                            name: Some("qwerty".to_string()),
                                             title: "Hello".to_string()
                                         }
                                     )
@@ -385,8 +410,8 @@ mod tests {
                                     ),
                                     Item::Button(
                                         Button {
-                                            id: "qwerty".to_string(),
-                                            name: "qwerty".to_string(),
+                                            id: Some("qwerty".to_string()),
+                                            name: Some("qwerty".to_string()),
                                             title: "Hello".to_string()
                                         }
                                     )
@@ -440,8 +465,8 @@ mod tests {
                                     ),
                                     Item::Button(
                                         Button {
-                                            id: "qwerty".to_string(),
-                                            name: "qwerty".to_string(),
+                                            id: Some("qwerty".to_string()),
+                                            name: Some("qwerty".to_string()),
                                             title: "Hello".to_string()
                                         }
                                     )
@@ -628,6 +653,111 @@ mod tests {
                 item: Item::Text(
                     Text {
                         text: "0".to_string()
+                    }
+                )
+            }
+        ));
+    }
+
+    #[test]
+    fn test_bug() {
+        //View(View { flex: None, height: None, width: None, body: [Text(Text { text: "Not found" })] }) -> View(View { flex: None, height: None, width: None, body: [View(View { flex: None, height: None, width: None, body: [TextInput(TextInput { id: "searchWord", name: "searchWord", placeholder: "searchword", value: "" }), Button(Button { id: None, name: Some("searchButton"), title: "Search" })] }), View(View { flex: None, height: Some(200), width: None, body: [] })] })
+
+        enable_trace();
+
+        let changes = diff(
+            &Item::View(
+                View {
+                    body: vec![
+                        Item::Text(
+                            Text {
+                                text: "Not found".to_string()
+                            }
+                        )
+                    ],
+                    ..Default::default()
+                }
+            ),
+            &Item::View(
+                View {
+                    body: vec![
+                        Item::View(
+                            View {
+                                body: vec![
+                                    Item::TextInput(
+                                        TextInput {
+                                            id: "searchWord".to_string(),
+                                            name: "searchWord".to_string(),
+                                            placeholder: "searchword".to_string(),
+                                            value: "".to_string()
+                                        }
+                                    ),
+                                    Item::Button(
+                                        Button {
+                                            id: None,
+                                            name: Some("searchButton".to_string()),
+                                            title: "Search".to_string()
+                                        }
+                                    )
+                                ],
+                                ..Default::default()
+                            }
+                        ),
+                        Item::View(
+                            View {
+                                body: vec![],
+                                height: Some(200),
+                                ..Default::default()
+                            }
+                        )
+                    ],
+                    ..Default::default()
+                }
+            )
+        );
+
+        println!("{:?}", changes[0]);
+        println!("{:?}", changes[1]);
+
+        assert_eq!(changes.len(), 2);
+        
+        assert_eq!(changes[0], ClientAction::Replace(
+            Replace {
+                path: vec![0],
+                item: Item::View(
+                    View {
+                        body: vec![
+                            Item::TextInput(
+                                TextInput {
+                                    id: "searchWord".to_string(),
+                                    name: "searchWord".to_string(),
+                                    placeholder: "searchword".to_string(),
+                                    value: "".to_string()
+                                }
+                            ),
+                            Item::Button(
+                                Button {
+                                    id: None,
+                                    name: Some("searchButton".to_string()),
+                                    title: "Search".to_string()
+                                }
+                            )
+                        ],
+                        ..Default::default()
+                    }
+                )
+            }
+        ));
+
+        assert_eq!(changes[1], ClientAction::InsertAt(
+            InsertAt {
+                path: vec![0],
+                inx: 0,
+                item: Item::View(
+                    View {
+                        body: vec![],
+                        height: Some(200),
+                        ..Default::default()
                     }
                 )
             }
