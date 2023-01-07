@@ -20,11 +20,17 @@ pub struct Flex {
 }
 
 #[derive(Debug, PartialEq, Clone, Default, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct View {
     pub flex: Option<Flex>,
     pub height: Option<u32>,
     pub width: Option<u32>,
-    pub body: Vec<Item>
+    pub body: Vec<Item>,
+    pub margin_top: Option<u32>,
+    pub margin_right: Option<u32>,
+    pub margin_bottom: Option<u32>,
+    pub margin_left: Option<u32>,
+    pub margin: Option<u32>,
 }
 
 #[derive(Debug, PartialEq, Default, Clone, serde::Serialize, serde::Deserialize)]

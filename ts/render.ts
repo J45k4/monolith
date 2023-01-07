@@ -22,6 +22,8 @@ export const renderItem = (item: Item, ctx: Context, old?: Element) => {
         case "view": {
             outerLogger.info("render view")
 
+            let div: HTMLDivElement = old as HTMLDivElement
+
             if (old instanceof HTMLDivElement) {
                 old.innerHTML = ""
 
@@ -31,9 +33,14 @@ export const renderItem = (item: Item, ctx: Context, old?: Element) => {
                 }
 
                 return
-            }
+            } else {
+                div = document.createElement("div")
 
-            const div = document.createElement("div")
+                for (const i of item.body) {
+                    const el = renderItem(i, ctx)
+                    div.appendChild(el as any)
+                }
+            }          
 
             if (item.width != null) {
                 div.style.width = item.width + "px"
@@ -41,6 +48,26 @@ export const renderItem = (item: Item, ctx: Context, old?: Element) => {
             
             if (item.height != null) {
                 div.style.height = item.height + "px"
+            }
+
+            if (item.margin != null) {
+                div.style.margin = item.margin + "px"
+            }
+
+            if (item.marginTop != null) {
+                div.style.marginTop = item.marginTop + "px"
+            }
+
+            if (item.marginRight != null) {
+                div.style.marginRight = item.marginRight + "px"
+            }
+
+            if (item.marginBottom != null) {
+                div.style.marginBottom = item.marginBottom + "px"
+            }
+
+            if (item.marginLeft != null) {
+                div.style.marginLeft = item.marginLeft + "px"
             }
 
             div.style.overflow = "auto"
@@ -55,11 +82,6 @@ export const renderItem = (item: Item, ctx: Context, old?: Element) => {
                 if (flex.grow) {
                     div.style.flexGrow = flex.grow.toString()
                 }
-            }
-
-            for (const i of item.body) {
-                const el = renderItem(i, ctx)
-                div.appendChild(el as any)
             }
 
             return div

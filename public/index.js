@@ -122,6 +122,7 @@ const renderItem = (item, ctx, old)=>{
         case "view":
             {
                 outerLogger.info("render view");
+                let div = old;
                 if (old instanceof HTMLDivElement) {
                     old.innerHTML = "";
                     for(let i = 0; i < item.body.length; i++){
@@ -129,13 +130,33 @@ const renderItem = (item, ctx, old)=>{
                         old.appendChild(el);
                     }
                     return;
+                } else {
+                    div = document.createElement("div");
+                    for (const i1 of item.body){
+                        const el1 = renderItem(i1, ctx);
+                        div.appendChild(el1);
+                    }
                 }
-                const div = document.createElement("div");
                 if (item.width != null) {
                     div.style.width = item.width + "px";
                 }
                 if (item.height != null) {
                     div.style.height = item.height + "px";
+                }
+                if (item.margin != null) {
+                    div.style.margin = item.margin + "px";
+                }
+                if (item.marginTop != null) {
+                    div.style.marginTop = item.marginTop + "px";
+                }
+                if (item.marginRight != null) {
+                    div.style.marginRight = item.marginRight + "px";
+                }
+                if (item.marginBottom != null) {
+                    div.style.marginBottom = item.marginBottom + "px";
+                }
+                if (item.marginLeft != null) {
+                    div.style.marginLeft = item.marginLeft + "px";
                 }
                 div.style.overflow = "auto";
                 if (item.flex) {
@@ -145,10 +166,6 @@ const renderItem = (item, ctx, old)=>{
                     if (flex.grow) {
                         div.style.flexGrow = flex.grow.toString();
                     }
-                }
-                for (const i1 of item.body){
-                    const el1 = renderItem(i1, ctx);
-                    div.appendChild(el1);
                 }
                 return div;
             }

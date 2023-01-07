@@ -19,6 +19,11 @@ export type View = {
     }
     height: number
     width: number
+    marginTop?: number
+    marginRight?: number
+    marginBottom?: number
+    marginLeft?: number
+    margin?: number 
     body: Item[]
 }
 
