@@ -60,7 +60,7 @@ fn inner_diff(changes: &mut Vec<ClientAction>, old: &Item, new: &Item, path: Ite
 
                         log::trace!("{:?} new path: {:?}", path, path);
     
-                        inner_diff(changes, &old.body[i], &new.body[i], path);
+                        inner_diff(changes, &old.body[i], &item, path);
                     },
                     EditOperation::InsertBack(item) => {
                         log::trace!("{:?} insert back", path);
@@ -660,7 +660,7 @@ mod tests {
     }
 
     #[test]
-    fn test_bug() {
+    fn test_bug_fixed() {
         //View(View { flex: None, height: None, width: None, body: [Text(Text { text: "Not found" })] }) -> View(View { flex: None, height: None, width: None, body: [View(View { flex: None, height: None, width: None, body: [TextInput(TextInput { id: "searchWord", name: "searchWord", placeholder: "searchword", value: "" }), Button(Button { id: None, name: Some("searchButton"), title: "Search" })] }), View(View { flex: None, height: Some(200), width: None, body: [] })] })
 
         enable_trace();
@@ -716,14 +716,27 @@ mod tests {
             )
         );
 
-        println!("{:?}", changes[0]);
-        println!("{:?}", changes[1]);
+        println!("change[0] {:?}", changes[0]);
+        println!("change[1] {:?}", changes[1]);
 
         assert_eq!(changes.len(), 2);
-        
+
         assert_eq!(changes[0], ClientAction::Replace(
             Replace {
                 path: vec![0],
+                item: Item::View(
+                    View {
+                        height: Some(200),
+                        body: vec![],
+                        ..Default::default()
+                    }
+                )
+            }
+        ));
+        
+        assert_eq!(changes[1], ClientAction::AddFront(
+            AddFront {
+                path: vec![],
                 item: Item::View(
                     View {
                         body: vec![
@@ -743,20 +756,6 @@ mod tests {
                                 }
                             )
                         ],
-                        ..Default::default()
-                    }
-                )
-            }
-        ));
-
-        assert_eq!(changes[1], ClientAction::InsertAt(
-            InsertAt {
-                path: vec![0],
-                inx: 0,
-                item: Item::View(
-                    View {
-                        body: vec![],
-                        height: Some(200),
                         ..Default::default()
                     }
                 )
