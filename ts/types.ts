@@ -11,12 +11,14 @@ export enum FlexDirection {
     Column = "column"
 }
 
+export type Flex = {
+    grow: number
+    direction: FlexDirection
+}
+
 export type View = {
     type: "view"
-    flex?: {
-        grow: number
-        direction: FlexDirection
-    }
+    flex?: Flex
     height: number
     width: number
     marginTop?: number
@@ -37,6 +39,7 @@ export type Button = {
     id: string
     name: string
     title: string
+    flex?: Flex
 }
 
 export type TextInput = {
@@ -45,6 +48,7 @@ export type TextInput = {
     name: string
     placeholder: string
     value: string
+    flex?: Flex
 }
 
 export type Table = {

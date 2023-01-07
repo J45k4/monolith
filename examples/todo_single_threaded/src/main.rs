@@ -1,6 +1,6 @@
 use env_logger::Builder;
 use log::LevelFilter;
-use monolith_core::{SingleMonolith, MonolithBuilder, Item, FlexDirection, View, Checkbox, Text, TextInput, Button, ClientEvent};
+use monolith_core::{SingleMonolith, MonolithBuilder, Item, FlexDirection, View, Checkbox, Text, TextInput, Button, ClientEvent, Flex};
 
 pub struct TodoItem {
     pub name: String,
@@ -78,20 +78,30 @@ fn render_page(todolist: &Todolist) -> Item {
             body: vec![
                 Item::View(
                     View {
-                        flex: None,
+                        flex: Some(Flex {
+                            direction: FlexDirection::Row,
+                            ..Default::default()
+                        }),
                         body: vec![
                             Item::TextInput(
                                 TextInput {
                                     name: "newTodoItemName".to_string(),
                                     id: "newTodoItemName".to_string(),
                                     placeholder: "Enter your name".to_string(),
-                                    value: todolist.new_item_name.clone()
+                                    value: todolist.new_item_name.clone(),
+                                    flex: Some(Flex {
+                                        grow: Some(1),
+                                        ..Default::default()
+                                    })
                                 }
                             ),
                             Item::Button(
                                 Button {
                                     name: Some("add".to_string()),
                                     title: "Add".to_string(),
+                                    flex: Some(Flex {
+                                        ..Default::default()
+                                    }),
                                     ..Default::default()
                                 }
                             )

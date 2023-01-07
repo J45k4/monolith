@@ -90,7 +90,8 @@ fn render_page(todolist: &Todolist) -> Item {
                                     name: "newTodoItemName".to_string(),
                                     id: "newTodoItemName".to_string(),
                                     placeholder: "Enter your name".to_string(),
-                                    value: todolist.new_item_name.clone()
+                                    value: todolist.new_item_name.clone(),
+                                    ..Default::default()
                                 }
                             ),
                             Item::Button(

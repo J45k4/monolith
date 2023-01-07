@@ -57,6 +57,7 @@ pub fn render_page(state: &State) -> Item {
                         name: Some("create_note".to_string()),
                         id: Some("create_note".to_string()),
                         title: "Create note".to_string(),
+                        ..Default::default()
                     }
                 ),
             ],

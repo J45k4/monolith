@@ -120,6 +120,19 @@ export const renderItem = (item: Item, ctx: Context, old?: Element) => {
             const button = document.createElement("button")
             button.innerText = item.title
 
+            if (item.flex != null) {
+                button.style.display = "flex"
+
+                const flex = item.flex
+
+                button.style.flexDirection = flex.direction
+                
+                if (flex.grow) {
+                    button.style.flexGrow = flex.grow.toString()
+                }
+            }
+
+
             button.onclick = () => {
                 logger.info("button clicked")
 
@@ -152,6 +165,19 @@ export const renderItem = (item: Item, ctx: Context, old?: Element) => {
             const input = document.createElement("input")
             input.placeholder = item.placeholder
             input.value = item.value
+
+            if (item.flex != null) {
+                input.style.display = "flex"
+
+                const flex = item.flex
+
+                input.style.flexDirection = flex.direction
+                
+                if (flex.grow) {
+                    input.style.flexGrow = flex.grow.toString()
+                }
+            }
+
 
             input.oninput = (e: any) => {
                 logger.info(`oninput ${input.value}`)

@@ -194,6 +194,14 @@ const renderItem = (item, ctx, old)=>{
                 }
                 const button = document.createElement("button");
                 button.innerText = item.title;
+                if (item.flex != null) {
+                    button.style.display = "flex";
+                    const flex1 = item.flex;
+                    button.style.flexDirection = flex1.direction;
+                    if (flex1.grow) {
+                        button.style.flexGrow = flex1.grow.toString();
+                    }
+                }
                 button.onclick = ()=>{
                     logger.info("button clicked");
                     ctx.sender.send({
@@ -219,6 +227,14 @@ const renderItem = (item, ctx, old)=>{
                 const input = document.createElement("input");
                 input.placeholder = item.placeholder;
                 input.value = item.value;
+                if (item.flex != null) {
+                    input.style.display = "flex";
+                    const flex2 = item.flex;
+                    input.style.flexDirection = flex2.direction;
+                    if (flex2.grow) {
+                        input.style.flexGrow = flex2.grow.toString();
+                    }
+                }
                 input.oninput = (e)=>{
                     logger1.info(`oninput ${input.value}`);
                     ctx.debouncer.change(e.target.value);

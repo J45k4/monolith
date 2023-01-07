@@ -43,6 +43,7 @@ pub struct Button {
     pub id: Option<String>,
     pub name: Option<String>,
     pub title: String,
+    pub flex: Option<Flex>
 }
 
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
@@ -50,12 +51,13 @@ pub struct Text {
     pub text: String,
 }
 
-#[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, PartialEq, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TextInput {
     pub id: String,
     pub name: String,
     pub placeholder: String,
     pub value: String,
+    pub flex: Option<Flex>,
 }
 
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
