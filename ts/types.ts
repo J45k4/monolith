@@ -24,6 +24,11 @@ export type View = {
     marginBottom?: number
     marginLeft?: number
     margin?: number 
+    paddingTop?: number
+    paddingRight?: number
+    paddingBottom?: number
+    paddingLeft?: number
+    padding?: number
     body: Item[]
 }
 

@@ -124,12 +124,11 @@ const renderItem = (item, ctx, old)=>{
                 outerLogger.info("render view");
                 let div = old;
                 if (old instanceof HTMLDivElement) {
-                    old.innerHTML = "";
+                    div.innerHTML = "";
                     for(let i = 0; i < item.body.length; i++){
                         const el = renderItem(item.body[i], ctx);
-                        old.appendChild(el);
+                        div.appendChild(el);
                     }
-                    return;
                 } else {
                     div = document.createElement("div");
                     for (const i1 of item.body){
@@ -144,6 +143,7 @@ const renderItem = (item, ctx, old)=>{
                     div.style.height = item.height + "px";
                 }
                 if (item.margin != null) {
+                    outerLogger.info("setMargin", item.margin + "px");
                     div.style.margin = item.margin + "px";
                 }
                 if (item.marginTop != null) {
@@ -157,6 +157,21 @@ const renderItem = (item, ctx, old)=>{
                 }
                 if (item.marginLeft != null) {
                     div.style.marginLeft = item.marginLeft + "px";
+                }
+                if (item.paddingTop != null) {
+                    div.style.paddingTop = item.paddingTop + "px";
+                }
+                if (item.paddingRight != null) {
+                    div.style.paddingRight = item.paddingRight + "px";
+                }
+                if (item.paddingBottom != null) {
+                    div.style.paddingBottom = item.paddingBottom + "px";
+                }
+                if (item.paddingLeft != null) {
+                    div.style.paddingLeft = item.paddingLeft + "px";
+                }
+                if (item.padding != null) {
+                    div.style.padding = item.padding + "px";
                 }
                 div.style.overflow = "auto";
                 if (item.flex) {

@@ -31,6 +31,11 @@ pub struct View {
     pub margin_bottom: Option<u32>,
     pub margin_left: Option<u32>,
     pub margin: Option<u32>,
+    pub padding_top: Option<u32>,
+    pub padding_right: Option<u32>,
+    pub padding_bottom: Option<u32>,
+    pub padding_left: Option<u32>,
+    pub padding: Option<u32>,
 }
 
 #[derive(Debug, PartialEq, Default, Clone, serde::Serialize, serde::Deserialize)]
