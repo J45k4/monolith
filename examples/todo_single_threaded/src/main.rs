@@ -74,6 +74,7 @@ fn render_page(todolist: &Todolist) -> Item {
     Item::View(
         View {
             flex: None,
+            margin: Some(10),
             body: vec![
                 Item::View(
                     View {
