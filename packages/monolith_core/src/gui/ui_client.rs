@@ -32,12 +32,14 @@ impl ClientRenderer {
 }
 
 pub struct ClientWriter {
+    id: usize,
     cmd_sender: mpsc::UnboundedSender<Command>,
 }
 
 impl Clone for ClientWriter {
     fn clone(&self) -> Self {
         Self {
+            id: self.id,
             cmd_sender: self.cmd_sender.clone()
         }
     }
@@ -64,6 +66,10 @@ impl ClientWriter {
         self.cmd_sender.send(
             Command::Navigate(url)
         ).unwrap();
+    }
+
+    pub fn id(&self) -> usize {
+        self.id
     }
 }
 
@@ -122,7 +128,10 @@ impl Client {
 
     pub fn split(self) -> (ClientWriter, ClientReceiver) {
         (
-            ClientWriter { cmd_sender: self.cmd_sender }, 
+            ClientWriter { 
+                id: self.id,
+                cmd_sender: self.cmd_sender 
+            }, 
             ClientReceiver {
                 id: self.id,
                 event_receiver: self.event_receiver
