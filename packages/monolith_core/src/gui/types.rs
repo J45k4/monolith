@@ -32,6 +32,7 @@ pub struct OnKeyDown {
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PathChanged {
     pub path: String,
+    pub query: HashMap<String, String>
 }
 
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
