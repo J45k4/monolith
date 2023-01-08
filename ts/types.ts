@@ -119,6 +119,13 @@ export type ReplaceState = {
     url: string
 }
 
+export type SetQuery = {
+    type: "setQuery"
+    query: {
+        [key: string]: string
+    }
+}
+
 export type SrvMessage = Replace |
     ReplaceAt |
     AddBack | 
@@ -126,7 +133,9 @@ export type SrvMessage = Replace |
     InsertAt | 
     RemoveInx |
     PushState |
-    ReplaceState
+    ReplaceState |
+    SetQuery
+
 
 export type OnClick = {
     type: "onClick"

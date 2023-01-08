@@ -1,4 +1,4 @@
-use std::{sync::Arc, pin::Pin, task::{Context, Poll}};
+use std::{sync::Arc, pin::Pin, task::{Context, Poll}, collections::HashMap};
 
 use futures_util::Stream;
 use hyper::upgrade::Upgraded;
@@ -7,14 +7,15 @@ use tokio::sync::{mpsc, Mutex};
 use futures_util::StreamExt;
 use futures_util::SinkExt;
 
-use crate::gui::{diff::{self, diff}, types::{ClientAction, Replace}};
+use crate::{gui::{diff::{self, diff}, types::{ClientAction, Replace}}, SetQuery};
 
 use super::{types::ClientEvent, gui::Item};
 
 #[derive(Debug)]
 enum Command {
     Render(Item),
-    Navigate(String)
+    Navigate(String),
+    SetQuery(HashMap<String, String>),
 }
 
 pub struct ClientRenderer {
@@ -65,6 +66,12 @@ impl ClientWriter {
 
         self.cmd_sender.send(
             Command::Navigate(url)
+        ).unwrap();
+    }
+
+    pub fn set_query(&self, map: HashMap<String, String>) {
+        self.cmd_sender.send(
+            Command::SetQuery(map)
         ).unwrap();
     }
 
@@ -218,6 +225,19 @@ impl Worker {
                 let changes = vec![
                     ClientAction::PushState(
                         crate::PushState { url: url.clone() }
+                    )
+                ];
+
+                let msg = serde_json::to_string(&changes)?;
+
+                self.ws.send(Message::text(msg)).await?;
+            }
+            Command::SetQuery(query) => {
+                let changes = vec![
+                    ClientAction::SetQuery(
+                        SetQuery {
+                            query: query.clone()
+                        }
                     )
                 ];
 

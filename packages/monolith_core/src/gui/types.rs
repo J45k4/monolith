@@ -97,6 +97,11 @@ pub struct ReplaceState {
 }
 
 #[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
+pub struct SetQuery {
+    pub query: HashMap<String, String>
+}
+
+#[derive(Debug, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum ClientAction {
     Replace(Replace),
@@ -107,4 +112,5 @@ pub enum ClientAction {
     RemoveInx(RemoveInx),
     PushState(PushState),
     ReplaceState(ReplaceState),
+    SetQuery(SetQuery),
 }

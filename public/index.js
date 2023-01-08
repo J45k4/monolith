@@ -416,6 +416,17 @@ window.onload = ()=>{
                     history.replaceState({}, "", message.url);
                     continue;
                 }
+                if (message.type === "setQuery") {
+                    const params = new URLSearchParams(location.search);
+                    for (const key of Object.keys(message.query)){
+                        const value = message.query[key];
+                        if (value != null) {
+                            params.set(key, value);
+                        }
+                    }
+                    history.replaceState({}, "", `${params.toString()}`);
+                    continue;
+                }
                 const element = getPathItem(message.path, root);
                 logger4.info("element", element);
                 if (!element) {
