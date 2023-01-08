@@ -52,6 +52,7 @@ window.onload = () => {
                     sender.send({
                         type: "pathChanged",
                         path: location.pathname,
+                        query: {}
                     })
                     sender.sendNow()
 
@@ -146,9 +147,16 @@ window.onload = () => {
 
             logger.info("onOpen", params)
 
+            const query: { [key: string]: string } = {}
+
+            params.forEach((value, key) => {
+                query[key] = value
+            })
+
             sender.send({
                 type: "pathChanged",
                 path: location.pathname,
+                query: query
             })
 
             sender.sendNow()
@@ -160,9 +168,16 @@ window.onload = () => {
 
         logger.info("url changed", location.href)
 
+        const query: { [key: string]: string } = {}
+
+        params.forEach((value, key) => {
+            query[key] = value
+        })
+
         sender.send({
             type: "pathChanged",
             path: location.pathname,
+            query,
         })
 
         sender.sendNow()

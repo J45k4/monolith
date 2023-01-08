@@ -160,6 +160,9 @@ export type OnKeyDown = {
 export type PathChanged = {
     type: "pathChanged"
     path: string
+    query: {
+        [key: string]: string
+    }
 }
 
 export type MessageToSrv = OnClick | 

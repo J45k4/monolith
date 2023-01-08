@@ -407,7 +407,8 @@ window.onload = ()=>{
                     history.pushState({}, "", message.url);
                     sender.send({
                         type: "pathChanged",
-                        path: location.pathname
+                        path: location.pathname,
+                        query: {}
                     });
                     sender.sendNow();
                     continue;
@@ -477,19 +478,29 @@ window.onload = ()=>{
         onOpen: (sender)=>{
             const params = new URLSearchParams(location.href);
             logger4.info("onOpen", params);
+            const query = {};
+            params.forEach((value, key)=>{
+                query[key] = value;
+            });
             sender.send({
                 type: "pathChanged",
-                path: location.pathname
+                path: location.pathname,
+                query: query
             });
             sender.sendNow();
         }
     });
     window.addEventListener("popstate", (evet)=>{
-        new URLSearchParams(location.href);
+        const params = new URLSearchParams(location.href);
         logger4.info("url changed", location.href);
+        const query = {};
+        params.forEach((value, key)=>{
+            query[key] = value;
+        });
         sender.send({
             type: "pathChanged",
-            path: location.pathname
+            path: location.pathname,
+            query
         });
         sender.sendNow();
     });
