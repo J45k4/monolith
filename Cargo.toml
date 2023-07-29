@@ -1,9 +1,6 @@
 [workspace]
 
 members = [
-    "./packages/monolith_core",
-    "./packages/monolith",
-    "./examples/todo",
-    "./examples/todo_single_threaded",
-    "./examples/notes"
+    "./packages/core",
+    "./packages/cli"
 ]

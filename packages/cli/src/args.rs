@@ -10,5 +10,12 @@ pub struct Args {
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    Dev
+    Run(RunArgs)
+}
+
+#[derive(Debug, Parser)]
+pub struct RunArgs {
+    pub path: String,
+    #[clap(short, long, default_value = "false")]
+    pub watch: bool
 }
