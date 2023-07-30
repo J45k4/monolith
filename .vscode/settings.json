@@ -1,3 +1,4 @@
 {
     "deno.config": "./tsconfig.json",
+    "rust-analyzer.imports.granularity.group": "item",
 }
