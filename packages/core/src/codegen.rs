@@ -39,9 +39,24 @@ pub trait ToHTML {
 // }
 
 pub struct Head {
-    title: String
+    pub title: String
 }
 
+impl Default for Head {
+    fn default() -> Self {
+        Head {
+            title: "".to_string()
+        }
+    }
+}
+
+impl ToString for Head {
+    fn to_string(&self) -> String {
+        format!("<head>\n<title>{}</title>\n</head>", self.title)
+    }
+}
+
+#[derive(Debug, Clone)]
 pub enum HtmlElType {
     H1,
     H2,
@@ -50,7 +65,9 @@ pub enum HtmlElType {
     H5,
     H6,
     Div,
-    Body
+    Body,
+    Button,
+    Input
 }
 
 pub enum Child {
@@ -87,7 +104,35 @@ impl ToHTML for HtmlEl {
             HtmlElType::H6 => format!("<h6>\n{}\n</h6>", children),
             HtmlElType::Div => format!("<div>\n{}\n</div>", children),
             HtmlElType::Body => format!("<body>\n{}\n</body>", children),
+            HtmlElType::Button => format!("<button>\n{}\n</button>", children),
+            HtmlElType::Input => format!("<input>\n{}\n</input>", children),
         }
+    }
+}
+
+
+pub struct Html {
+    pub head: Head,
+    pub body: HtmlEl
+}
+
+impl Default for Html {
+    fn default() -> Self {
+        Html {
+            head: Head {
+                title: "".to_string()
+            },
+            body: HtmlEl {
+                typ: HtmlElType::Body,
+                children: vec![]
+            }
+        }
+    }
+}
+
+impl ToString for Html {
+    fn to_string(&self) -> String {
+        format!("<html>\n{}\n{}\n</html>", self.head.to_string(), self.body.to_html())
     }
 }
 
@@ -217,7 +262,13 @@ pub struct PropAccess {
     pub value: Box<CodeNode>
 }
 
+pub struct Assign {
+    pub name: Box<CodeNode>,
+    pub value: Box<CodeNode>
+}
+
 pub enum CodeNode {
+    None,
     Fn(Fn),
     Call(Call),
     ConstVar(ConstVar),
@@ -230,6 +281,7 @@ pub enum CodeNode {
 impl ToJS for CodeNode {
     fn to_js(&self) -> String {
         match self {
+            CodeNode::None => "".to_string(),
             CodeNode::Fn(f) => f.to_js(),
             CodeNode::Call(c) => c.to_js(),
             CodeNode::ConstVar(c) => c.to_js(),
@@ -241,13 +293,17 @@ impl ToJS for CodeNode {
     }
 }
 
-// pub struct WebProg {
-//     pub head: Head,
-//     pub body: Vec<BodyItem>
-// }
+pub enum CssCode {
+    None
+}
 
-
-
+impl ToString for CssCode {
+    fn to_string(&self) -> String {
+        match self {
+            CssCode::None => "".to_string(),
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {

@@ -13,8 +13,12 @@ async fn main() {
             if args.watch {
                 println!("running in watch mode");
             }
+            
 
-            Monolith::new().add_script_path(&args.path).listen(8080).start().await;
+            Monolith::new()
+                .add("/", args.path)
+                .listen(8080)
+                .start().await;
         }
     }
 }
