@@ -1,165 +1,218 @@
-use flexscript::{ASTNode, Value};
+use flexscript::Value;
 
-
-pub fn build_node_html(html: &mut String, ast: &ASTNode) {
-    println!("build_node_html");
-
-    match ast {
-        ASTNode::Ident(_) => todo!(),
-        ASTNode::Assign(_) => todo!(),
-        ASTNode::ObjIns(obj) => {
-            let name 
-            println!("Obj name: {}", obj.name);
-            match obj.name.as_ref() {
-                "Html" => {
-                    *html += "<html>";
-                    for prop in &obj.probs {
-                        println!("prop.key: {}", prop.name);
-
-                        match prop.name.as_ref() {
-                            "head" => {
-                                build_node_html(html, &prop.value);
-                            },
-                            "body" => {
-                                *html += "<body>";
-                                build_node_html(html, &prop.value);
-                                *html += "</body>";
-                            },
-                            _ => todo!()
-                        }
-                    }
-                    *html += "</html>";
-                },
-                "H1" => {
-                    for prop in &obj.probs {
-                        match prop.name.as_ref() {
-                            "text" => {
-                                *html += "<h1>";
-                                build_node_html(html, &prop.value);
-                                *html += "</h1>";
-                            },
-                            _ => todo!()
-                        }
-                    }
-                },
-                "Form" => {
-                    for prop in &obj.probs {
-                        match prop.name.as_ref() {
-                            "body" => {
-                                *html += "<form>";
-                                build_node_html(html, &prop.value);
-                                *html += "</form>";
-                            },
-                            _ => todo!()
-                        }
-                    }
-                },
-                "Input" => {
-                    for prop in &obj.probs {
-                        match prop.name.as_ref() {
-                            "type" => {
-                                *html += "<input type=\"";
-                                build_node_html(html, &prop.value);
-                                *html += "\">";
-                            },
-                            _ => todo!()
-                        }
-                    }
-                },
-                "Button" => {
-                    for prop in &obj.probs {
-                        match prop.name.as_ref() {
-                            "text" => {
-                                *html += "<button>";
-                                build_node_html(html, &prop.value);
-                                *html += "</button>";
-                            },
-                            _ => todo!()
-                        }
-                    }
-                },
-                "Head" => {
-                    *html += "<head>";
-                    for prop in &obj.probs {
-                        match prop.name.as_ref() {
-                            "title" => {
-                                *html += "<title>";
-                                build_node_html(html, &prop.value);
-                                *html += "</title>";
-                            },
-                            _ => todo!()
-                        }
-                    }
-                    *html += "<head>";
-                },
-                _ => todo!()
-            }
-        },
-        ASTNode::Array(arr) => {
-            for node in arr.items.iter() {
-                build_node_html(html, node);
-            }
-        },
-        ASTNode::Call(_) => todo!(),
-        ASTNode::Property(_, _) => todo!(),
-        ASTNode::Lit(lit) => {
-            match lit {
-                Value::Str(s) => {
-                    *html += s;
-                },
-                _ => todo!()
-            };
-        },
-        ASTNode::LiteralPercent(_) => todo!(),
-        ASTNode::Fun(_) => todo!(),
-        ASTNode::StructDef(_) => todo!(),
-        ASTNode::TypeDef(_) => todo!(),
-        ASTNode::Var(_) => todo!(),
-        ASTNode::ProbAccess(_) => todo!(),
-        ASTNode::Obj(_) => todo!(),
-        ASTNode::Ret(_) => todo!(),
-        ASTNode::BinOp(_) => todo!(),
-        _ => {}
-    };
+pub struct Html {
+    pub head: Head,
+    pub body: HtmlEl
 }
 
-
-
-pub fn build_nodes_html(ast: &Vec<ASTNode>) -> String {
-    let mut html = String::new();
-
-    for node in ast {
-        build_node_html(&mut html, node);
+impl Default for Html {
+    fn default() -> Self {
+        Html {
+            head: Head {
+                title: "".to_string()
+            },
+            body: HtmlEl {
+                typ: HtmlElType::Body,
+                children: vec![]
+            }
+        }
     }
-
-    html
 }
 
-#[cfg(test)]
-mod tests {
-    use flexscript::Parser;
+impl ToString for Html {
+    fn to_string(&self) -> String {
+        format!("<html>\n{}\n{}\n</html>", self.head.to_string(), self.body.to_string())
+    }
+}
 
-    use super::*;
+impl From<Value> for Html {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Obj(obj) => {
+                let mut html = Html::default();
 
-    #[test]
-    fn test_build_html() {
-        let code = r#"
-            Html {
-                head: Head {
-                    title: "Hello World"
-                },
-                body: [
-                    H1 {
-                        text: "Hello World"
+                for prop in &obj.props {
+                    match prop.name.as_ref() {
+                        "head" => {
+                            html.head = Head::from(prop.value.clone());
+                        },
+                        "body" => {
+                            html.body = HtmlEl::from(prop.value.clone());
+                        },
+                        _ => todo!()
                     }
-                ]
-            }
-        "#;
+                }
 
-        let ast = Parser::new(code).parse();
+                html
+            },
+            _ => todo!()
+        }
+    }
+}
 
-        let html = build_nodes_html(&ast);
+pub struct Head {
+    pub title: String
+}
 
-        println!("{}", html);
+impl Default for Head {
+    fn default() -> Self {
+        Head {
+            title: "".to_string()
+        }
+    }
+}
+
+impl ToString for Head {
+    fn to_string(&self) -> String {
+        format!("<head>\n<title>{}</title>\n</head>", self.title)
+    }
+}
+
+impl From<Value> for Head {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Obj(obj) => {
+                let mut head = Head::default();
+
+                for prop in &obj.props {
+                    match prop.name.as_ref() {
+                        "title" => {
+                            if let Value::Str(s) = &prop.value {
+                                head.title = s.to_string();
+                            }
+                        },
+                        _ => todo!()
+                    }
+                }
+
+                head
+            },
+            _ => todo!()
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum HtmlElType {
+    H1,
+    H2,
+    H3,
+    H4,
+    H5,
+    H6,
+    Div,
+    Body,
+    Button,
+    Input
+}
+
+pub enum Child {
+    HtmlEl(HtmlEl),
+    Text(String)
+}
+
+impl ToString for Child {
+    fn to_string(&self) -> String {
+        match self {
+            Child::HtmlEl(el) => el.to_string(),
+            Child::Text(s) => s.clone()
+        }
+    }
+}
+
+pub struct  HtmlEl {
+    pub typ: HtmlElType,
+    pub children: Vec<Child>
+}
+
+impl ToString for HtmlEl {
+    fn to_string(&self) -> String {
+        let children = self.children.iter()
+            .map(|child| child.to_string())
+            .collect::<Vec<String>>().join("\n");
+
+        match self.typ {
+            HtmlElType::H1 => format!("<h1>\n{}\n</h1>", children),
+            HtmlElType::H2 => format!("<h2>\n{}\n</h2>", children),
+            HtmlElType::H3 => format!("<h3>\n{}\n</h3>", children),
+            HtmlElType::H4 => format!("<h4>\n{}\n</h4>", children),
+            HtmlElType::H5 => format!("<h5>\n{}\n</h5>", children),
+            HtmlElType::H6 => format!("<h6>\n{}\n</h6>", children),
+            HtmlElType::Div => format!("<div>\n{}\n</div>", children),
+            HtmlElType::Body => format!("<body>\n{}\n</body>", children),
+            HtmlElType::Button => format!("<button>\n{}\n</button>", children),
+            HtmlElType::Input => format!("<input>\n{}\n</input>", children),
+        }
+    }
+}
+
+impl From<Value> for HtmlEl {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Obj(obj) => {
+                let typ = match obj.name.unwrap().as_str() {
+                    "H1" => HtmlElType::H1,
+                    "H2" => HtmlElType::H2,
+                    "H3" => HtmlElType::H3,
+                    "H4" => HtmlElType::H4,
+                    "H5" => HtmlElType::H5,
+                    "H6" => HtmlElType::H6,
+                    "Button" => HtmlElType::Button,
+                    "Div" => HtmlElType::Div,
+                    "Input" => HtmlElType::Input,
+                    _ => todo!()
+                };
+
+
+                let mut el = HtmlEl {
+                    typ: typ,
+                    children: vec![]
+                };
+
+                for prop in &obj.props {
+                    match prop.name.as_ref() {
+                        "type" => {
+                            
+                        },
+                        "children" => {
+                            if let Value::Array(arr) = &prop.value {
+                                for item in arr {
+                                    if let Value::Str(s) = item {
+                                        el.children.push(Child::Text(s.to_string()));
+                                    } else {
+                                        el.children.push(Child::HtmlEl(HtmlEl::from(item.clone())));
+                                    }
+                                }
+                            }
+                        },
+                        "text" => {
+                            if let Value::Str(s) = &prop.value {
+                                el.children.push(Child::Text(s.to_string()));
+                            }
+                        }
+                        _ => todo!("{:?}", prop)
+                    }
+                }
+
+                el
+            },
+            Value::Array(arr) => {
+                let mut el = HtmlEl {
+                    typ: HtmlElType::Div,
+                    children: vec![]
+                };
+
+                for item in arr {
+                    if let Value::Str(s) = item {
+                        el.children.push(Child::Text(s.to_string()));
+                    } else {
+                        el.children.push(Child::HtmlEl(HtmlEl::from(item.clone())));
+                    }
+                }
+
+                el
+            },
+            _ => todo!("{:?}", value)
+        }
     }
 }

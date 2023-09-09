@@ -23,9 +23,9 @@ return Html {
                 }
                 Button {
                     text: "Add"
-                    on_click: () => {
-                        print("Hello")
-                    }
+                    // on_click: () => {
+                    //     print("Hello")
+                    // }
                 }
             ]
         }

@@ -1,4 +1,5 @@
 use std::net::SocketAddr;
+use flexscript::RunResult;
 use flexscript::Value;
 use flexscript::Vm;
 use hyper::Body;
@@ -7,6 +8,8 @@ use hyper::Response;
 use hyper::server::conn;
 use hyper::service::service_fn;
 use tokio::net::TcpListener;
+
+use crate::html::Html;
 
 #[derive(Clone)]
 enum ResBody {
@@ -84,10 +87,19 @@ impl Monolith
                     let res = match route {
                         Some(route) => {
                             let res = self.vm.run_blk(route.blk, Value::None);
-                            
-                            let text = format!("{:?}", res);
 
-                            Response::new(Body::from(text))
+                            match res {
+                                RunResult::Value(value) => {
+                                    let text = Html::from(value).to_string();
+                                    Response::new(Body::from(text))
+                                },
+                                RunResult::Await { stack_id, value } => {
+                                    Response::new(Body::from("Not found"))
+                                },
+                                RunResult::None => {
+                                    Response::new(Body::from("Not found"))
+                                },
+                            }
                         },
                         None => {
                             Response::new(Body::from("Not found"))
@@ -97,22 +109,6 @@ impl Monolith
                     async move { 
                         wrap_res(res).await
                     }
-
-                    // async move {
-                    //     match route {
-                    //         Some(route) => {
-                    //             handle_req(req, route).await
-                    //         },
-                    //         None => {
-                    //             Ok(Response::new(Body::from("Not found")))
-                    //         }
-                    //     }
-                    // }
-                    // async move {
-                    //     bail!("test");
-
-                    //     Ok(Response::new(Body::from("Not found")))
-                    // }
                 }
             )).await {
                 Ok(_) => {},
@@ -127,12 +123,3 @@ impl Monolith
 async fn wrap_res(res: Response<Body>) -> anyhow::Result<Response<Body>> {
     Ok(res)
 }
-
-// async fn handle_req(req: Request<Body>, route: Route) -> anyhow::Result<Response<Body>> {
-//     // let mut s = String::new();
-//     // build_node_html(&mut s, &route.res_body);
-
-//     let html = 
-    
-//     Ok(Response::new(Body::from(html)))
-// }

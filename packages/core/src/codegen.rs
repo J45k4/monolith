@@ -2,9 +2,7 @@ pub trait ToJS {
     fn to_js(&self) -> String;
 }
 
-pub trait ToHTML {
-    fn to_html(&self) -> String;
-}
+
 
 // pub fn js_code_for_node(buff: &mut String, ast: &ASTNode) {
 //     match ast {
@@ -38,103 +36,7 @@ pub trait ToHTML {
 //     }
 // }
 
-pub struct Head {
-    pub title: String
-}
 
-impl Default for Head {
-    fn default() -> Self {
-        Head {
-            title: "".to_string()
-        }
-    }
-}
-
-impl ToString for Head {
-    fn to_string(&self) -> String {
-        format!("<head>\n<title>{}</title>\n</head>", self.title)
-    }
-}
-
-#[derive(Debug, Clone)]
-pub enum HtmlElType {
-    H1,
-    H2,
-    H3,
-    H4,
-    H5,
-    H6,
-    Div,
-    Body,
-    Button,
-    Input
-}
-
-pub enum Child {
-    HtmlEl(HtmlEl),
-    Text(String)
-}
-
-impl ToHTML for Child {
-    fn to_html(&self) -> String {
-        match self {
-            Child::HtmlEl(el) => el.to_html(),
-            Child::Text(s) => s.clone()
-        }
-    }
-}
-
-pub struct  HtmlEl {
-    pub typ: HtmlElType,
-    pub children: Vec<Child>
-}
-
-impl ToHTML for HtmlEl {
-    fn to_html(&self) -> String {
-        let children = self.children.iter()
-            .map(|child| child.to_html())
-            .collect::<Vec<String>>().join("\n");
-
-        match self.typ {
-            HtmlElType::H1 => format!("<h1>\n{}\n</h1>", children),
-            HtmlElType::H2 => format!("<h2>\n{}\n</h2>", children),
-            HtmlElType::H3 => format!("<h3>\n{}\n</h3>", children),
-            HtmlElType::H4 => format!("<h4>\n{}\n</h4>", children),
-            HtmlElType::H5 => format!("<h5>\n{}\n</h5>", children),
-            HtmlElType::H6 => format!("<h6>\n{}\n</h6>", children),
-            HtmlElType::Div => format!("<div>\n{}\n</div>", children),
-            HtmlElType::Body => format!("<body>\n{}\n</body>", children),
-            HtmlElType::Button => format!("<button>\n{}\n</button>", children),
-            HtmlElType::Input => format!("<input>\n{}\n</input>", children),
-        }
-    }
-}
-
-
-pub struct Html {
-    pub head: Head,
-    pub body: HtmlEl
-}
-
-impl Default for Html {
-    fn default() -> Self {
-        Html {
-            head: Head {
-                title: "".to_string()
-            },
-            body: HtmlEl {
-                typ: HtmlElType::Body,
-                children: vec![]
-            }
-        }
-    }
-}
-
-impl ToString for Html {
-    fn to_string(&self) -> String {
-        format!("<html>\n{}\n{}\n</html>", self.head.to_string(), self.body.to_html())
-    }
-}
 
 // impl ToHTML for HtmlNode {
 //     fn to_html(&self) -> String {
