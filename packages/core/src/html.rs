@@ -94,7 +94,6 @@ pub fn build_node_html(html: &mut String, ast: &ASTNode) {
                 _ => todo!()
             }
         },
-        ASTNode::ForLoop(_) => todo!(),
         ASTNode::Array(arr) => {
             for node in arr.items.iter() {
                 build_node_html(html, node);
@@ -119,6 +118,7 @@ pub fn build_node_html(html: &mut String, ast: &ASTNode) {
         ASTNode::Obj(_) => todo!(),
         ASTNode::Ret(_) => todo!(),
         ASTNode::BinOp(_) => todo!(),
+        _ => {}
     };
 }
 

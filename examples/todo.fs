@@ -1,4 +1,10 @@
 
+return Html {
+    head: Head {
+        title: "LOOL"
+    }
+    body: []
+}
 
 return Html {
     head: Head {
@@ -15,6 +21,9 @@ return Html {
                 }
                 Button {
                     text: "Add"
+                    on_click: () => {
+                        print("Hello")
+                    }
                 }
             ]
         }

@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use flexscript::ASTNode;
 use flexscript::Parser;
+use flexscript::StructIns;
 use flexscript::Value;
 
 use crate::codegen::Child;
@@ -72,37 +73,10 @@ fn create_dynprog(code_text: &str) -> Arc<dyn Prog + Send + Sync> {
     // }
 
     Arc::new(DynProg{
-        html: gen_html(&ast_nodes).to_string(),
+        html: HtmlGen::gen(&ast_nodes).to_string(),
         css: state.css.to_string(),
         js: state.js.to_js()
     })
-}
-
-fn gen_head(node: &ASTNode) -> Head {
-    println!("gen_head");
-    let mut head = Head::default();
-
-    match node {
-        ASTNode::StructIns(ins) => {
-            match ins.name.as_str() {
-                "Head" => {
-                    for prop in &ins.probs {
-                        if prop.name == "title" {
-                            if let ASTNode::Lit(value) = &*prop.value {
-                                if let Value::Str(s) = value {
-                                    head.title = s.to_string();
-                                }
-                            }
-                        }
-                    }
-                },
-                _ => todo!(),
-            }
-        },
-        _ => todo!()
-    }
-
-    head
 }
 
 fn gen_el(node: &ASTNode) -> HtmlEl {
@@ -165,78 +139,157 @@ fn gen_el(node: &ASTNode) -> HtmlEl {
     }
 }
 
-fn get_body(node: &ASTNode) -> HtmlEl {
-    println!("gen_body");
+struct HtmlGen {
+    depth: usize,
 
-    let mut h = HtmlEl {
-        typ: HtmlElType::Body,
-        children: Vec::new(),
-    };
+}
 
-    match node {
-        ASTNode::Array(arr) => {
-            for item in &arr.items {
-                if let ASTNode::Lit(v) = item {
-                    match v {
-                        Value::Str(s) => {
-                            h.children.push(Child::Text(s.to_string()));
+impl HtmlGen {
+    pub fn gen(nodes: &Vec<ASTNode>) -> Html {
+        let mut gen = HtmlGen {
+            depth: 0
+        };
+
+        gen.gen_html(nodes)
+    }
+
+    fn parse_ins(&mut self, ins: &StructIns) {
+        ins.name
+    }
+
+    fn parse_html_tag(&mut self, ins: &StructIns) -> Html {
+        let mut html = Html::default();
+
+        for prop in &ins.probs {
+            if prop.name == "head" {
+                html.head = self.gen_head(&prop.value)
+            }
+
+            if prop.name == "body" {
+                html.body = self.get_body(&prop.value)
+            }
+        }
+
+        html
+    }
+
+    fn gen_html(&mut self, nodes: &Vec<ASTNode>) -> Html {
+        println!("gen_html");
+    
+        for node in nodes {
+            match node {
+                ASTNode::Ret(r) => {
+                    match &*r.value {
+                        Some(ASTNode::StructIns(ins)) => {
+                            if ins.name == "Html" {
+                                return self.parse_html_tag(ins);
+                            }
+                        }
+                        _ => {}
+                    };
+
+                    if self.depth == 0 {
+                        break;
+                    }
+                }
+                ASTNode::Assign(a) => {
+                    let var = match &*a.left {
+                        ASTNode::Ident(idt) => idt,
+                        _ => todo!()
+                    };
+
+                    match &*a.right {
+                        ASTNode::StructIns(ins) => {
+                            if ins.name == "Html" {
+                                self.parse_html_tag(ins);
+                            }
                         }
                         _ => {}
                     }
-                } else {
-                    h.children.push(Child::HtmlEl(gen_el(&item)));
                 }
+                _ => {}
             }
         }
-        ASTNode::StructIns(ins) => {
-            match ins.name.as_str() {
-                "Body" => {
-                    for prop in &ins.probs {
-                        if prop.name == "children" {
-                            h.children.push(Child::HtmlEl(gen_el(&prop.value)));
-                        }
-                    }
-                },
-                _ => todo!()
-            }
-        }
-        _ => todo!()
+
+        // if self.depth > 0 {
+        //     self.depth -= 1;
+        // }
+    
+        // html
+
+        Html::default()
     }
 
-    h
-}
-
-fn gen_html(nodes: &Vec<ASTNode>) -> Html {
-    println!("gen_html");
-
-    let mut html = Html::default();
-
-    for node in nodes {
+    fn gen_head(&self, node: &ASTNode) -> Head {
+        println!("gen_head");
+        let mut head = Head::default();
+    
         match node {
-            ASTNode::Ret(r) => {
-                match &*r.value {
-                    Some(ASTNode::StructIns(ins)) => {
-                        if ins.name == "Html" {
-                            for prop in &ins.probs {
-                                if prop.name == "head" {
-                                    html.head = gen_head(&prop.value)
-                                }
-
-                                if prop.name == "body" {
-                                    html.body = get_body(&prop.value)
+            ASTNode::StructIns(ins) => {
+                match ins.name.as_str() {
+                    "Head" => {
+                        for prop in &ins.probs {
+                            if prop.name == "title" {
+                                if let ASTNode::Lit(value) = &*prop.value {
+                                    if let Value::Str(s) = value {
+                                        head.title = s.to_string();
+                                    }
                                 }
                             }
                         }
-                    }
-                    _ => {}
+                    },
+                    _ => todo!(),
                 }
-            }
-            _ => break
+            },
+            _ => todo!()
         }
+    
+        head
     }
 
-    html
+    fn get_body(&self, node: &ASTNode) -> HtmlEl {
+        println!("gen_body");
+    
+        let mut h = HtmlEl {
+            typ: HtmlElType::Body,
+            children: Vec::new(),
+        };
+    
+        match node {
+            ASTNode::Array(arr) => {
+                for item in &arr.items {
+                    if let ASTNode::Lit(v) = item {
+                        match v {
+                            Value::Str(s) => {
+                                h.children.push(Child::Text(s.to_string()));
+                            }
+                            _ => {}
+                        }
+                    } else {
+                        h.children.push(Child::HtmlEl(gen_el(&item)));
+                    }
+                }
+            }
+            ASTNode::StructIns(ins) => {
+                match ins.name.as_str() {
+                    "Body" => {
+                        for prop in &ins.probs {
+                            if prop.name == "children" {
+                                h.children.push(Child::HtmlEl(gen_el(&prop.value)));
+                            }
+                        }
+                    },
+                    _ => todo!()
+                }
+            }
+            _ => todo!()
+        }
+    
+        h
+    }
 }
+
+
 
 fn compile_node(state: &mut CompState, node: &ASTNode) {
     match node {
@@ -289,6 +342,7 @@ fn compile_node(state: &mut CompState, node: &ASTNode) {
 
         },
         ASTNode::BinOp(_) => todo!(),
+        _ => {}
     }
 }
 

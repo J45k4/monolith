@@ -106,6 +106,7 @@ impl Monolith
     }
 
     pub async fn start(self) {
+        log::info!("listening {}", self.port);
         let addr = SocketAddr::from(([127, 0, 0, 1], self.port));
         let listener = TcpListener::bind(addr).await.unwrap();
 
