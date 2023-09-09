@@ -7,7 +7,8 @@ pub fn build_node_html(html: &mut String, ast: &ASTNode) {
     match ast {
         ASTNode::Ident(_) => todo!(),
         ASTNode::Assign(_) => todo!(),
-        ASTNode::StructIns(obj) => {
+        ASTNode::ObjIns(obj) => {
+            let name 
             println!("Obj name: {}", obj.name);
             match obj.name.as_ref() {
                 "Html" => {

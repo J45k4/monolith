@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use args::{Args, Commands};
 use clap::Parser;
 use log::LevelFilter;
@@ -22,8 +24,13 @@ async fn main() {
                 println!("running in watch mode");
             }
 
+            let code = match Path::new(&args.path).exists() {
+                true => std::fs::read_to_string(&args.path).unwrap(),
+                false => args.path.clone()
+            };
+
             Monolith::new()
-                .add("/", args.path)
+                .add("/", &code)
                 .listen(8080)
                 .start().await;
         }

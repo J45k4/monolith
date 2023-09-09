@@ -154,7 +154,7 @@ impl HtmlGen {
     }
 
     fn parse_ins(&mut self, ins: &StructIns) {
-        ins.name
+        // ins.name
     }
 
     fn parse_html_tag(&mut self, ins: &StructIns) -> Html {
@@ -322,7 +322,6 @@ fn compile_node(state: &mut CompState, node: &ASTNode) {
 
             }
         },
-        ASTNode::ForLoop(_) => todo!(),
         ASTNode::Array(arr) => {
             for node in &arr.items {
                 compile_node(state, node);
