@@ -218,7 +218,7 @@ dependencies = [
 [[package]]
 name = "flexscript"
 version = "0.1.0"
-source = "git+https://github.com/J45k4/FlexScript.git?rev=dd391f33d1e3336896b43de9c8144ab38c5bdad3#dd391f33d1e3336896b43de9c8144ab38c5bdad3"
+source = "git+https://github.com/J45k4/FlexScript.git?rev=e7a73d8a6fbda4f929f77c32e4dab54cf841efcf#e7a73d8a6fbda4f929f77c32e4dab54cf841efcf"
 dependencies = [
  "anyhow",
  "log",

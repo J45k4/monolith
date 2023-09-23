@@ -1,5 +1,6 @@
 use flexscript::Value;
 
+#[derive(Debug, Clone)]
 pub struct Html {
     pub head: Head,
     pub body: HtmlEl
@@ -37,7 +38,38 @@ impl From<Value> for Html {
                             html.head = Head::from(prop.value.clone());
                         },
                         "body" => {
-                            html.body = HtmlEl::from(prop.value.clone());
+                            let mut el = HtmlEl {
+                                typ: HtmlElType::Body,
+                                children: vec![]
+                            };
+
+                            match &prop.value {
+                                Value::List(list) => {
+                                    for item in list {
+                                        match item {
+                                            Value::Str(s) => {
+                                                el.children.push(Child::Text(s.to_string()));
+                                            },
+                                            Value::Int(i) => {
+                                                el.children.push(Child::Text(i.to_string()));
+                                            },
+                                            _ => {
+                                                el.children.push(Child::HtmlEl(HtmlEl::from(item.clone())));
+                                            }
+                                        }
+                                        // if let Value::Str(s) = item {
+                                        //     el.children.push(Child::Text(s.to_string()));
+                                        // } else {
+                                        //     el.children.push(Child::HtmlEl(HtmlEl::from(item.clone())));
+                                        // }
+                                    }
+                                },
+                                _ => {
+                                    el.children.push(Child::HtmlEl(HtmlEl::from(prop.value.clone())));
+                                }
+                            }
+
+                            html.body = el;
                         },
                         _ => todo!()
                     }
@@ -45,11 +77,15 @@ impl From<Value> for Html {
 
                 html
             },
-            _ => todo!()
+            // Value::List(list) => {
+
+            // },
+            _ => todo!("{:?}", value)
         }
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Head {
     pub title: String
 }
@@ -103,9 +139,11 @@ pub enum HtmlElType {
     Div,
     Body,
     Button,
-    Input
+    Input,
+    Head
 }
 
+#[derive(Debug, Clone)]
 pub enum Child {
     HtmlEl(HtmlEl),
     Text(String)
@@ -120,6 +158,7 @@ impl ToString for Child {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct  HtmlEl {
     pub typ: HtmlElType,
     pub children: Vec<Child>
@@ -142,6 +181,7 @@ impl ToString for HtmlEl {
             HtmlElType::Body => format!("<body>\n{}\n</body>", children),
             HtmlElType::Button => format!("<button>\n{}\n</button>", children),
             HtmlElType::Input => format!("<input>\n{}\n</input>", children),
+            HtmlElType::Head => format!("<head>\n{}\n</head>", children),
         }
     }
 }
@@ -150,7 +190,8 @@ impl From<Value> for HtmlEl {
     fn from(value: Value) -> Self {
         match value {
             Value::Obj(obj) => {
-                let typ = match obj.name.unwrap().as_str() {
+                let name = obj.name.unwrap();
+                let typ = match name.as_str() {
                     "H1" => HtmlElType::H1,
                     "H2" => HtmlElType::H2,
                     "H3" => HtmlElType::H3,
@@ -160,7 +201,8 @@ impl From<Value> for HtmlEl {
                     "Button" => HtmlElType::Button,
                     "Div" => HtmlElType::Div,
                     "Input" => HtmlElType::Input,
-                    _ => todo!()
+                    "Head" => HtmlElType::Head,
+                    _ => todo!("{:?}", name)
                 };
 
 
@@ -175,8 +217,8 @@ impl From<Value> for HtmlEl {
                             
                         },
                         "children" => {
-                            if let Value::Array(arr) = &prop.value {
-                                for item in arr {
+                            if let Value::List(list) = &prop.value {
+                                for item in list {
                                     if let Value::Str(s) = item {
                                         el.children.push(Child::Text(s.to_string()));
                                     } else {
@@ -186,23 +228,30 @@ impl From<Value> for HtmlEl {
                             }
                         },
                         "text" => {
-                            if let Value::Str(s) = &prop.value {
-                                el.children.push(Child::Text(s.to_string()));
+                            match &prop.value {
+                                Value::Str(s) => {
+                                    el.children.push(Child::Text(s.to_string()));
+                                },
+                                Value::Int(i) => {
+                                    el.children.push(Child::Text(i.to_string()));
+                                },
+                                _ => todo!("{:?}", prop)
                             }
-                        }
+                        },
+                        "title" => {},
                         _ => todo!("{:?}", prop)
                     }
                 }
 
                 el
             },
-            Value::Array(arr) => {
+            Value::List(list) => {
                 let mut el = HtmlEl {
                     typ: HtmlElType::Div,
                     children: vec![]
                 };
 
-                for item in arr {
+                for item in list {
                     if let Value::Str(s) = item {
                         el.children.push(Child::Text(s.to_string()));
                     } else {
@@ -213,6 +262,76 @@ impl From<Value> for HtmlEl {
                 el
             },
             _ => todo!("{:?}", value)
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use flexscript::RunResult;
+    use flexscript::Vm;
+
+    use super::*;
+
+    #[test]
+    fn empty_html_page() {
+        let html = Html::default();
+
+        assert_eq!(html.to_string(), r#"<html>
+<head>
+<title></title>
+</head>
+<body>
+
+</body>
+</html>"#);
+    }
+
+    #[test]
+    fn html_page_from_value() {
+        let mut vm = Vm::new();
+
+        let res = vm.run_code(r#"
+        return Html {
+            head: Head {
+                title: "hello"
+            },
+            body: []
+        }"#);
+
+        match res {
+            RunResult::Value(value) => {
+                let html = Html::from(value).to_string();
+                assert_eq!(html, "<html>\n<head>\n<title>hello</title>\n</head>\n<body>\n\n</body>\n</html>");
+            },
+            _ => todo!()
+        }
+    }
+
+    #[test]
+    fn three_titles() {
+        let mut vm = Vm::new();
+
+        let res = vm.run_code(r#"
+        return Html {
+            head: Head {
+                title: "hello"
+            },
+            body: [1, 2, 3].map((p) => {
+                return H1 {
+                    text: p
+                }
+            })
+        }"#);
+
+        println!("{:?}", res);
+
+        match res {
+            RunResult::Value(value) => {
+                let html = Html::from(value).to_string();
+                assert_eq!(html, "<html>\n<head>\n<title>hello</title>\n</head>\n<body>\n<h1>\n1\n</h1>\n<h1>\n2\n</h1>\n<h1>\n3\n</h1>\n</body>\n</html>");
+            },
+            _ => todo!()
         }
     }
 }

@@ -29,6 +29,13 @@ return Html {
                 }
             ]
         }
+        Div {
+            children: [1, 2, 3].map((p) => {
+                return H1 {
+                    text: p
+                }
+            })
+        }
     ]
 }
 

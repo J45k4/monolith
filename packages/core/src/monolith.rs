@@ -3,7 +3,6 @@ use flexscript::RunResult;
 use flexscript::Value;
 use flexscript::Vm;
 use hyper::Body;
-use hyper::Request;
 use hyper::Response;
 use hyper::server::conn;
 use hyper::service::service_fn;
@@ -12,15 +11,9 @@ use tokio::net::TcpListener;
 use crate::html::Html;
 
 #[derive(Clone)]
-enum ResBody {
-    StaticHtml(String),
-    StaticJSON(String),
-}
-
-#[derive(Clone)]
 struct Route {
     path: String,
-    blk: usize
+    blk: u32
 }
 
 
