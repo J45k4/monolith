@@ -31,8 +31,21 @@ return Html {
         }
         Div {
             children: [1, 2, 3].map((p) => {
-                return H1 {
-                    text: p
+                return Div {
+                    style: {
+                        display: "flex"
+                    }
+                    children: [
+                        H1 {
+                            text: p
+                        }
+                        Button {
+                            text: "Delete"
+                            on_click: () => {
+                                print("Hello")
+                            }
+                        }
+                    ]
                 }
             })
         }

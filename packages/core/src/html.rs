@@ -14,6 +14,7 @@ impl Default for Html {
             },
             body: HtmlEl {
                 typ: HtmlElType::Body,
+                style: CSSProps::default(),
                 children: vec![]
             }
         }
@@ -40,6 +41,7 @@ impl From<Value> for Html {
                         "body" => {
                             let mut el = HtmlEl {
                                 typ: HtmlElType::Body,
+                                style: CSSProps::default(),
                                 children: vec![]
                             };
 
@@ -100,7 +102,7 @@ impl Default for Head {
 
 impl ToString for Head {
     fn to_string(&self) -> String {
-        format!("<head>\n<title>{}</title>\n</head>", self.title)
+        format!("<head><title>{}</title></head>", self.title)
     }
 }
 
@@ -159,8 +161,106 @@ impl ToString for Child {
 }
 
 #[derive(Debug, Clone)]
+pub enum Display {
+    Flex,
+    Initial
+}
+
+impl Default for Display {
+    fn default() -> Self {
+        Display::Initial
+    }
+}
+
+impl TryFrom<String> for Display {
+    type Error = ();
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Display::try_from(&value)
+    }
+}
+
+impl TryFrom<&String> for Display {
+    type Error = ();
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        match value.as_str() {
+            "flex" => Ok(Display::Flex),
+            _ => Err(())
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum FlexDirection {
+    Row,
+    Column,
+    RowReserve,
+    ColumnReserve,
+    None
+}
+
+impl Default for FlexDirection {
+    fn default() -> Self {
+        FlexDirection::None
+    }
+}
+
+impl TryFrom<&String> for FlexDirection {
+    type Error = ();
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        match value.as_str() {
+            "row" => Ok(FlexDirection::Row),
+            "column" => Ok(FlexDirection::Column),
+            "row-reverse" => Ok(FlexDirection::RowReserve),
+            "column-reverse" => Ok(FlexDirection::ColumnReserve),
+            _ => Err(())
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct CSSProps {
+    display: Display,
+    flex_direction: FlexDirection
+}
+
+impl ToString for CSSProps {
+    fn to_string(&self) -> String {
+        let mut s = String::new();
+
+        match self.display {
+            Display::Flex => {
+                s.push_str("display: flex;");
+            },
+            _ => {}
+        }
+
+        match self.flex_direction {
+            FlexDirection::Row => {
+                s.push_str("flex-direction: row;");
+            },
+            FlexDirection::Column => {
+                s.push_str("flex-direction: column;");
+            },
+            FlexDirection::RowReserve => {
+                s.push_str("flex-direction: row-reverse;");
+            },
+            FlexDirection::ColumnReserve => {
+                s.push_str("flex-direction: column-reverse;");
+            },
+            _ => {}
+        }
+
+        s
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct  HtmlEl {
     pub typ: HtmlElType,
+    pub style: CSSProps,
     pub children: Vec<Child>
 }
 
@@ -170,18 +270,20 @@ impl ToString for HtmlEl {
             .map(|child| child.to_string())
             .collect::<Vec<String>>().join("\n");
 
+        let style = self.style.to_string();
+
         match self.typ {
-            HtmlElType::H1 => format!("<h1>\n{}\n</h1>", children),
-            HtmlElType::H2 => format!("<h2>\n{}\n</h2>", children),
-            HtmlElType::H3 => format!("<h3>\n{}\n</h3>", children),
-            HtmlElType::H4 => format!("<h4>\n{}\n</h4>", children),
-            HtmlElType::H5 => format!("<h5>\n{}\n</h5>", children),
-            HtmlElType::H6 => format!("<h6>\n{}\n</h6>", children),
-            HtmlElType::Div => format!("<div>\n{}\n</div>", children),
-            HtmlElType::Body => format!("<body>\n{}\n</body>", children),
-            HtmlElType::Button => format!("<button>\n{}\n</button>", children),
-            HtmlElType::Input => format!("<input>\n{}\n</input>", children),
-            HtmlElType::Head => format!("<head>\n{}\n</head>", children),
+            HtmlElType::H1 => format!("<h1>{}</h1>", children),
+            HtmlElType::H2 => format!("<h2>{}</h2>", children),
+            HtmlElType::H3 => format!("<h3>{}</h3>", children),
+            HtmlElType::H4 => format!("<h4>{}</h4>", children),
+            HtmlElType::H5 => format!("<h5>{}</h5>", children),
+            HtmlElType::H6 => format!("<h6>{}</h6>", children),
+            HtmlElType::Div => format!(r#"<div style="{}">{}</div>"#, style, children),
+            HtmlElType::Body => format!("<body>{}</body>", children),
+            HtmlElType::Button => format!("<button>{}</button>", children),
+            HtmlElType::Input => format!("<input>{}</input>", children),
+            HtmlElType::Head => format!("<head>{}</head>", children),
         }
     }
 }
@@ -208,6 +310,7 @@ impl From<Value> for HtmlEl {
 
                 let mut el = HtmlEl {
                     typ: typ,
+                    style: CSSProps::default(),
                     children: vec![]
                 };
 
@@ -239,7 +342,31 @@ impl From<Value> for HtmlEl {
                             }
                         },
                         "title" => {},
-                        _ => todo!("{:?}", prop)
+                        "style" => {
+                            match &prop.value {
+                                Value::Obj(obj) => {
+                                    for prop in &obj.props {
+                                        match prop.name.as_ref() {
+                                            "display" => {
+                                                match &prop.value {
+                                                    Value::Str(str) => {
+                                                        el.style.display = Display::try_from(str).unwrap()
+                                                    },
+                                                    _ => todo!("{:?}", prop)
+                                                }
+                                                
+                                            },
+                                            "flexDirection" => {
+                                                
+                                            },
+                                            _ => todo!("{:?}", prop)
+                                        }
+                                    }
+                                },
+                                _ => todo!("{:?}", prop)
+                            }
+                        }
+                        _ => {}
                     }
                 }
 
@@ -248,6 +375,7 @@ impl From<Value> for HtmlEl {
             Value::List(list) => {
                 let mut el = HtmlEl {
                     typ: HtmlElType::Div,
+                    style: CSSProps::default(),
                     children: vec![]
                 };
 

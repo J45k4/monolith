@@ -18,4 +18,4 @@ hyper = { version = "0.14", features = ["full"] }
 hyper-tungstenite = "0.9"
 lazy_static = "1"
 env_logger = "0.10"
-flexscript = { git = "https://github.com/J45k4/FlexScript.git", rev = "e7a73d8a6fbda4f929f77c32e4dab54cf841efcf" }
+flexscript = { git = "https://github.com/J45k4/FlexScript.git", rev = "7c1fc75ce0664b42375c5fc26e30fdc433482d0e" }
