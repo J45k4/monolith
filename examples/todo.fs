@@ -1,12 +1,23 @@
 
-// return "hello"
+todoItem = (name, completed, on_click) => {
+    return Div {
+        style: {
+            display: "flex"
+        }
+        children: [
+            H1 {
+                text: name
+            }
+            Input {
+                type: "checkbox"
+                checked: completed
+                on_click
+            }
+        ]
+    }
+}
 
-// return Html {
-//     head: Head {
-//         title: "LOOL"
-//     }
-//     body: []
-// }
+todos = []
 
 return Html {
     head: Head {
@@ -23,29 +34,20 @@ return Html {
                 }
                 Button {
                     text: "Add"
-                    // on_click: () => {
-                    //     print("Hello")
-                    // }
+                    on_click: () => {
+                        todos.push({
+                            name: "Hello",
+                            completed: false
+                        })
+                    }
                 }
             ]
         }
         Div {
-            children: [1, 2, 3].map((p) => {
-                return Div {
-                    style: {
-                        display: "flex"
-                    }
-                    children: [
-                        H1 {
-                            text: p
-                        }
-                        Button {
-                            text: "Delete"
-                            on_click: () => {
-                                print("Hello")
-                            }
-                        }
-                    ]
+            children: todos.map((todo) => {
+                return todoItem {
+                    name: todo.name
+                    completed: todo.completed
                 }
             })
         }

@@ -4,7 +4,7 @@ mod match_routes;
 mod handle_request;
 mod test_util;
 mod html;
-mod prog;
+mod js;
 
 pub use monolith::*;
 pub use gui::*;

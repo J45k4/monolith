@@ -1,5 +1,7 @@
 use flexscript::Value;
 
+use crate::js::JSNode;
+
 #[derive(Debug, Clone)]
 pub struct Html {
     pub head: Head,
@@ -10,7 +12,8 @@ impl Default for Html {
     fn default() -> Self {
         Html {
             head: Head {
-                title: "".to_string()
+                title: "".to_string(),
+                scripts: vec![]
             },
             body: HtmlEl {
                 typ: HtmlElType::Body,
@@ -88,21 +91,40 @@ impl From<Value> for Html {
 }
 
 #[derive(Debug, Clone)]
+pub struct Script {
+    pub content: Option<JSNode>
+}
+
+#[derive(Debug, Clone)]
 pub struct Head {
-    pub title: String
+    pub title: String,
+    pub scripts: Vec<Script>
 }
 
 impl Default for Head {
     fn default() -> Self {
         Head {
-            title: "".to_string()
+            title: "".to_string(),
+            scripts: vec![]
         }
     }
 }
 
 impl ToString for Head {
     fn to_string(&self) -> String {
-        format!("<head><title>{}</title></head>", self.title)
+        let mut scripts = vec![];
+        for script in &self.scripts {
+            if let Some(content) = &script.content {
+                scripts.push(content.to_string());
+            }
+        }
+
+        let scripts = scripts.iter()
+            .map(|p| format!("<script>{}</script>", p))
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        format!("<head><title>{}</title>{}</head>", self.title, scripts)
     }
 }
 

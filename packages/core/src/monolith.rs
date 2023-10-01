@@ -1,4 +1,5 @@
 use std::net::SocketAddr;
+use flexscript::Parser;
 use flexscript::RunResult;
 use flexscript::Value;
 use flexscript::Vm;
@@ -9,11 +10,15 @@ use hyper::service::service_fn;
 use tokio::net::TcpListener;
 
 use crate::html::Html;
+use crate::html::Script;
+use crate::js::JSNode;
+use crate::js::JSGen;
 
 #[derive(Clone)]
 struct Route {
     path: String,
-    blk: u32
+    blk: u32,
+    js_node: JSNode
 }
 
 
@@ -35,10 +40,13 @@ impl Monolith
 
     pub fn add(mut self, path: &str, code: &str) -> Self {
         let blk = self.vm.compile_code(code);
+        let ast = Parser::new(code).parse();
+        let js = JSGen::new().gen(ast);
 
         self.routes.push(Route {
             path: path.to_string(),
-            blk: blk
+            blk: blk,
+            js_node: js
         });
 
         self
@@ -83,8 +91,14 @@ impl Monolith
 
                             match res {
                                 RunResult::Value(value) => {
-                                    let text = Html::from(value).to_string();
-                                    Response::new(Body::from(text))
+                                    let mut html = Html::from(value);
+                                    html.head.scripts.push(Script {
+                                        content: Some(route.js_node.clone())
+                                    });
+                                    let str = html.to_string();
+                                    log::info!("html: {}", str);
+
+                                    Response::new(Body::from(str))
                                 },
                                 RunResult::Await { stack_id, value } => {
                                     Response::new(Body::from("Not found"))
