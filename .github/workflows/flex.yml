@@ -1,0 +1,57 @@
+name: Flexscript Monolith
+
+on:
+  push:
+    branches: [trunk]
+    paths: ['flex/**', '.github/workflows/flex.yml']
+  pull_request:
+    branches: [trunk]
+    paths: ['flex/**', '.github/workflows/flex.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: flex
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install SQLite runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libsqlite3-0 libssl3
+      - name: Download and checksum the released Flexscript compiler
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p build/compiler
+          gh release download 0.0.5 --repo J45k4/flexscript --dir build/compiler \
+            --pattern flexscript-0.0.5-linux-x86_64 \
+            --pattern flexscript-core-0.0.5-linux-x86_64 --pattern SHA256SUMS
+          (cd build/compiler && sha256sum --check SHA256SUMS)
+          chmod +x build/compiler/flexscript-0.0.5-linux-x86_64
+      - name: Build with Flexscript and test native database and realtime behavior
+        run: |
+          compiler="$PWD/build/compiler/flexscript-0.0.5-linux-x86_64"
+          "$compiler" tools/build.flex -o build/build
+          build/build "$compiler"
+          build/test-integration "$compiler"
+      - name: Test real browser updates, reconnects and local state
+        run: |
+          browser="$(command -v google-chrome || command -v chromium)"
+          build/test-browser build/todo "$browser"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: monolith-todo-linux-x86_64
+          path: |
+            flex/build/monolith
+            flex/build/todo
+            flex/build/todo-desktop.png
+            flex/build/todo-mobile.png
